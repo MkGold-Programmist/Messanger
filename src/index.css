@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+@theme {
+  --color-brand-red: #E11D48;
+  --color-brand-redHover: #BE123C;
+  --color-brand-darkBg: #09090B;  
+  --color-brand-darkPanel: #18181B;
+  --color-brand-lightBg: #FAFAFA; 
+  --color-brand-lightPanel: #FFFFFF;
+}
+
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
