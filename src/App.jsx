@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import Layout from './Layout/Layout'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import { ChatProvider } from './context/ChatContext'
 
 const ProtectedRoute = ({ children, session }) => {
   if (!session) {
@@ -44,7 +45,10 @@ const App = () => {
       path: '/',
       element: (
         <ProtectedRoute session={session}>
-          <Layout />
+          {/* Оборачиваем Layout и все его дочерние элементы (включая Home) в ChatProvider */}
+          <ChatProvider>
+            <Layout />
+          </ChatProvider>
         </ProtectedRoute>
       ),
       children: [

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Sidebar } from '../components/chat/SideBar'
 import { ChatWindow } from '../components/chat/ChatWindow'
+import { useChatState } from '../context/ChatContext'
 
 const CHAT_SELECT = `
   id,
@@ -49,6 +50,14 @@ const Home = () => {
 
   const messagesEndRef = useRef(null)
   const searchTerm = searchQuery.trim()
+
+  const { activeChatName, setActiveChatName } = useChatState()
+
+  useEffect(() => {
+    if (!activeChatName) {
+      setActiveChat(null)
+    }
+  }, [activeChatName])
 
   useEffect(() => {
     let mounted = true
@@ -98,6 +107,14 @@ const Home = () => {
     () => chats.find((chat) => chat.id === activeChat),
     [activeChat, chats],
   )
+
+  const handleSetActiveChat = (chatId) => {
+    setActiveChat(chatId)
+    const selectedChat = chats.find(c => c.id === chatId)
+    if (selectedChat) {
+      setActiveChatName(selectedChat.companionName)
+    }
+  }
 
   useEffect(() => {
     if (!activeChat) {
@@ -173,7 +190,6 @@ const Home = () => {
     }
 
     let cancelled = false
-
     const searchUsers = async () => {
       setSearchLoading(true)
       const { data, error } = await supabase
@@ -190,12 +206,10 @@ const Home = () => {
         setErrorMessage(`Ошибка поиска: ${error.message}`)
         return
       }
-
       setGlobalUsers(data || [])
     }
 
     const delayDebounce = setTimeout(searchUsers, 300)
-
     return () => {
       cancelled = true
       clearTimeout(delayDebounce)
@@ -231,7 +245,7 @@ const Home = () => {
 
     const existingChat = chats.find((chat) => chat.companionId === companion.id)
     if (existingChat) {
-      setActiveChat(existingChat.id)
+      handleSetActiveChat(existingChat.id)
       setSearchQuery('')
       return
     }
@@ -255,39 +269,43 @@ const Home = () => {
     if (newChat) {
       const formatted = formatChat(newChat, currentUser.id)
       setChats((prev) => [formatted, ...prev.filter((chat) => chat.id !== formatted.id)])
-      setActiveChat(newChat.id)
+      handleSetActiveChat(newChat.id)
       setSearchQuery('')
     }
   }
 
   return (
     <div className="flex flex-1 overflow-hidden w-full h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100">
-      <Sidebar
-        chats={chats}
-        activeChat={activeChat}
-        setActiveChat={setActiveChat}
-        chatsLoading={chatsLoading}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        globalUsers={globalUsers}
-        searchLoading={searchLoading}
-        startingChatId={startingChatId}
-        onStartChat={handleStartChat}
-        errorMessage={errorMessage}
-        setErrorMessage={setErrorMessage}
-      />
+      <div className={`${isInsideChat ? 'hidden sm:block' : 'block'} w-full sm:w-80 border-r border-slate-200 dark:border-zinc-900 h-full`}>
+        <Sidebar
+          chats={chats}
+          activeChat={activeChat}
+          setActiveChat={handleSetActiveChat}
+          chatsLoading={chatsLoading}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          globalUsers={globalUsers}
+          searchLoading={searchLoading}
+          startingChatId={startingChatId}
+          onStartChat={handleStartChat}
+          errorMessage={errorMessage}
+          setErrorMessage={setErrorMessage}
+        />
+      </div>
 
-      <ChatWindow
-        activeChatData={activeChatData}
-        setActiveChat={setActiveChat}
-        messages={messages}
-        messagesLoading={messagesLoading}
-        currentUserId={currentUser?.id}
-        companionSettings={activeCompanionSettings}
-        sendingMessage={sendingMessage}
-        onSendMessage={handleSendMessage}
-        messagesEndRef={messagesEndRef}
-      />
+      <div className={`${isInsideChat ? 'block' : 'hidden sm:block'} flex-1 h-full`}>
+        <ChatWindow
+          activeChatData={activeChatData}
+          setActiveChat={handleSetActiveChat}
+          messages={messages}
+          messagesLoading={messagesLoading}
+          currentUserId={currentUser?.id}
+          companionSettings={activeCompanionSettings}
+          sendingMessage={sendingMessage}
+          onSendMessage={handleSendMessage}
+          messagesEndRef={messagesEndRef}
+        />
+      </div>
     </div>
   )
 }
