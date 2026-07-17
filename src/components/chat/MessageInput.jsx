@@ -10,7 +10,7 @@ export const MessageInput = ({ onSendMessage, sending }) => {
     if (!cleanText || sending) return;
 
     onSendMessage(cleanText);
-    setText(""); // Очищаем локальный стейт
+    setText("");
   };
 
   return (

@@ -17,7 +17,6 @@ export const ChatWindow = ({
   const wallpaperStyle = useMemo(() => {
     const wp = companionSettings?.chat_wallpaper
     if (wp && wp !== 'default') {
-      // Поддержка прозрачности фона в зависимости от темы (светлая/темная)
       return {
         backgroundImage: `linear-gradient(rgba(var(--bg-overlay, 248,250,252), 0.85), rgba(var(--bg-overlay, 248,250,252), 0.85)), url(${wp})`
       }
