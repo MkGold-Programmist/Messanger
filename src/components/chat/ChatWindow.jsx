@@ -24,10 +24,11 @@ export const ChatWindow = ({
     return undefined
   }, [companionSettings])
 
+  // Дизайнерская заглушка для десктопа (на мобилках скрыта, так как там виден сайдбар)
   if (!activeChatData) {
     return (
-      <section className="flex-1 hidden sm:flex flex-col items-center justify-center text-slate-400 dark:text-zinc-600 p-6 text-center bg-slate-50 dark:bg-zinc-950">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white dark:bg-zinc-900 text-brand-red shadow-sm">
+      <section className="hidden sm:flex flex-1 flex-col items-center justify-center text-slate-400 dark:text-zinc-600 p-6 text-center bg-slate-50 dark:bg-zinc-950 h-full">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white dark:bg-zinc-900 text-brand-red shadow-sm border border-slate-100 dark:border-zinc-900">
           <Icon name="message" className="w-7 h-7" />
         </div>
         <p className="text-sm font-bold text-slate-600 dark:text-zinc-300">Выберите чат</p>
@@ -37,18 +38,28 @@ export const ChatWindow = ({
   }
 
   return (
-    <section className="flex-1 flex flex-col bg-slate-50 dark:bg-zinc-950">
-      <header className="h-16 border-b border-slate-200 dark:border-zinc-900 px-4 sm:px-6 flex items-center gap-3 justify-between bg-white/70 dark:bg-zinc-900/50 backdrop-blur-md">
-        <button onClick={() => setActiveChat(null)} className="sm:hidden rounded-lg px-2 py-1 text-xs font-bold text-brand-red bg-rose-500/10">Назад</button>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-bold tracking-tight truncate">{activeChatData.companionName}</h2>
-          <p className="text-[10px] text-emerald-500 font-bold tracking-wide mt-0.5 uppercase truncate">
-            {companionSettings?.status_text || 'в сети'}
-          </p>
+    <section className={`flex-1 flex flex-col bg-slate-50 dark:bg-zinc-950 h-full w-full ${activeChatData ? 'flex' : 'hidden sm:flex'}`}>
+      {/* Шапка чата */}
+      <header className="h-16 border-b border-slate-200 dark:border-zinc-900 px-4 sm:px-6 flex items-center gap-3 justify-between bg-white/80 dark:bg-zinc-900/60 backdrop-blur-xl z-10 flex-shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <button 
+            onClick={() => setActiveChat(null)} 
+            className="sm:hidden flex items-center justify-center p-2 -ml-2 rounded-xl text-brand-red hover:bg-rose-500/10 active:scale-95 transition-all"
+            aria-label="Назад к чатам"
+          >
+            <Icon name="x" className="rotate-90 w-5 h-5" /> 
+          </button>
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold tracking-tight truncate text-slate-900 dark:text-slate-100">{activeChatData.companionName}</h2>
+            <p className="text-[10px] text-emerald-500 font-bold tracking-wide mt-0.5 uppercase truncate">
+              {companionSettings?.status_text || 'в сети'}
+            </p>
+          </div>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 bg-cover bg-center" style={wallpaperStyle}>
+      {/* Тело чата */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 bg-cover bg-center custom-scrollbar" style={wallpaperStyle}>
         {messagesLoading ? (
           <div className="space-y-3">
             <div className="h-11 w-52 rounded-2xl bg-white dark:bg-zinc-900 animate-pulse" />
@@ -69,11 +80,11 @@ export const ChatWindow = ({
             const isMe = msg.sender_id === currentUserId
             return (
               <div key={msg.id} className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[86%] sm:max-w-[72%] p-3 rounded-2xl text-sm shadow-sm transition-all ${
+                <div className={`max-w-[85%] sm:max-w-[70%] p-3 rounded-2xl text-sm shadow-sm transition-all ${
                   isMe ? 'rounded-br-md bg-brand-red text-white shadow-brand-red/10' : 'rounded-bl-md bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800/40 text-slate-800 dark:text-zinc-200'
                 }`}>
                   <p className="leading-relaxed break-words whitespace-pre-wrap">{msg.text}</p>
-                  <span className={`block text-[10px] text-right mt-1.5 font-medium ${isMe ? 'text-red-100' : 'text-slate-400 dark:text-zinc-500'}`}>
+                  <span className={`block text-[9px] text-right mt-1.5 font-medium ${isMe ? 'text-red-100/80' : 'text-slate-400 dark:text-zinc-500'}`}>
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -84,6 +95,7 @@ export const ChatWindow = ({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Поле ввода */}
       <MessageInput onSendMessage={onSendMessage} sending={sendingMessage} />
     </section>
   )

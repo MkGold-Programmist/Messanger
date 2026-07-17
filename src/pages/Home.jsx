@@ -88,11 +88,7 @@ const Home = () => {
       .filter((chat) => chat.companionId)
 
     setChats(formattedChats)
-
-    if (!activeChat && formattedChats.length > 0) {
-      setActiveChat(formattedChats[0].id)
-    }
-  }, [activeChat, currentUser])
+  }, [currentUser])
 
   useEffect(() => {
     fetchChats()
@@ -206,7 +202,6 @@ const Home = () => {
     }
   }, [currentUser, searchTerm])
 
-  // Отправка сообщения
   const handleSendMessage = async (cleanText) => {
     if (!activeChat || !currentUser || sendingMessage) return
 
@@ -231,7 +226,6 @@ const Home = () => {
     }
   }
 
-  // Создание нового чата
   const handleStartChat = async (companion) => {
     if (!currentUser || startingChatId) return
 
@@ -267,7 +261,7 @@ const Home = () => {
   }
 
   return (
-    <div className="flex flex-1 overflow-hidden w-full bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100">
+    <div className="flex flex-1 overflow-hidden w-full h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100">
       <Sidebar
         chats={chats}
         activeChat={activeChat}

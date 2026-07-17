@@ -20,7 +20,7 @@ export const Sidebar = ({
   const searchTerm = searchQuery.trim()
 
   return (
-    <section className={`w-full sm:w-80 md:w-88 flex-col border-r border-slate-200 dark:border-zinc-900 bg-white dark:bg-zinc-900/60 flex-shrink-0 ${activeChat ? 'hidden sm:flex' : 'flex'}`}>
+    <section className={`w-full sm:w-80 md:w-96 flex flex-col border-r border-slate-200 dark:border-zinc-900 bg-white dark:bg-zinc-900/40 backdrop-blur-xl flex-shrink-0 h-full ${activeChat ? 'hidden sm:flex' : 'flex'}`}>
       <div className="p-4 flex flex-col gap-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-brand-red">Messenger</p>
@@ -33,13 +33,13 @@ export const Sidebar = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Поиск людей по никнейму"
-            className="w-full pl-9 pr-9 py-2.5 text-sm rounded-xl bg-slate-100 dark:bg-zinc-950 border border-transparent focus:border-brand-red outline-none transition-all text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-zinc-500"
+            className="w-full pl-9 pr-9 py-2.5 text-sm rounded-xl bg-slate-100 dark:bg-zinc-950 border border-transparent focus:border-brand-red/40 focus:bg-white dark:focus:bg-zinc-900 outline-none transition-all text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-zinc-500"
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
             <Icon name="search" />
           </span>
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-red" aria-label="Очистить поиск">
+            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-red transition-colors" aria-label="Очистить поиск">
               <Icon name="x" />
             </button>
           )}
@@ -47,14 +47,14 @@ export const Sidebar = ({
       </div>
 
       {errorMessage && (
-        <button onClick={() => setErrorMessage('')} className="mx-4 mb-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-left text-xs font-medium text-rose-600 dark:text-rose-300">
+        <button onClick={() => setErrorMessage('')} className="mx-4 mb-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-left text-xs font-medium text-rose-600 dark:text-rose-300 hover:bg-rose-500/20 transition-colors">
           {errorMessage}
         </button>
       )}
 
-      <div className="flex-1 overflow-y-auto space-y-1 px-2 pb-4">
+      <div className="flex-1 overflow-y-auto space-y-1 px-2 pb-4 custom-scrollbar">
         {searchTerm ? (
-          <div>
+          <div className="space-y-1">
             <p className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 px-3 mb-2 uppercase tracking-wider">Глобальный поиск</p>
             {searchLoading ? (
               <p className="text-xs text-slate-400 text-center py-6">Ищу людей...</p>
@@ -67,7 +67,7 @@ export const Sidebar = ({
                     {getInitial(user.username || user.email)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-semibold truncate">{user.username || 'Без имени'}</h4>
+                    <h4 className="text-xs font-semibold truncate text-slate-900 dark:text-slate-100">{user.username || 'Без имени'}</h4>
                     <p className="text-[10px] text-slate-400 truncate">{user.email}</p>
                   </div>
                   <button
@@ -106,7 +106,7 @@ export const Sidebar = ({
                   selected ? 'bg-brand-red text-white shadow-lg shadow-brand-red/20' : 'hover:bg-slate-100 dark:hover:bg-zinc-800/40'
                 }`}
               >
-                <span className={`w-10 h-10 shrink-0 rounded-xl font-bold flex items-center justify-center text-sm shadow-inner ${
+                <span className={`w-10 h-10 shrink-0 rounded-xl font-bold flex items-center justify-center text-sm shadow-inner transition-colors ${
                   selected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300'
                 }`}>
                   {getInitial(chat.companionName)}
