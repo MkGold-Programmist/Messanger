@@ -51,7 +51,11 @@ const Home = () => {
   const messagesEndRef = useRef(null)
   const searchTerm = searchQuery.trim()
 
+  // Подключаем наш созданный контекст
   const { activeChatName, setActiveChatName } = useChatState()
+
+  // ИСПРАВЛЕНИЕ: Объявляем переменную для проверки, открыт ли сейчас чат
+  const isInsideChat = !!activeChatName
 
   useEffect(() => {
     if (!activeChatName) {
