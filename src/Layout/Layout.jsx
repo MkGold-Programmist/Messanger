@@ -199,35 +199,46 @@ const Layout = () => {
   const profileName = userProfile?.username || userProfile?.email || 'Мой профиль'
 
   return (
-    <div className="h-dvh w-screen flex flex-col-reverse sm:flex-row overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100/50 text-slate-900 dark:from-zinc-950 dark:to-zinc-900/20 dark:text-slate-100 font-sans transition-colors duration-300">
+    <div className="h-dvh w-screen flex flex-col sm:flex-row overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100/50 text-slate-900 dark:from-zinc-950 dark:to-zinc-900/20 dark:text-slate-100 font-sans transition-colors duration-300">
+      
+      <aside className="h-16 sm:h-full w-full sm:w-20 flex sm:flex-col items-center justify-between px-4 sm:px-0 sm:py-6 border-b sm:border-b-0 sm:border-r border-slate-200/80 dark:border-zinc-900/80 bg-white/80 dark:bg-zinc-950/40 backdrop-blur-md flex-shrink-0 z-50 transition-colors duration-300">
+        <div className="flex sm:flex-col gap-4 sm:gap-6 items-center w-full justify-between sm:justify-start px-2 sm:px-0">
 
-      <aside className="h-16 sm:h-full w-full sm:w-20 flex sm:flex-col items-center justify-between px-6 sm:px-0 sm:py-6 border-t sm:border-t-0 sm:border-r border-slate-200/80 dark:border-zinc-900/80 bg-white/80 dark:bg-zinc-950/40 backdrop-blur-md flex-shrink-0 z-20 transition-colors duration-300">
-        
-        <div className="flex sm:flex-col gap-5 sm:gap-6 items-center w-full justify-start sm:justify-start">
-          <button className="relative cursor-pointer" onClick={() => setShowStatusInput(!showStatusInput)} title="Изменить статус" aria-label="Изменить статус">
+          <button className="relative cursor-pointer flex-shrink-0" onClick={() => setShowStatusInput(!showStatusInput)} title="Изменить статус" aria-label="Изменить статус">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-red to-rose-500 text-white flex items-center justify-center font-bold border border-rose-400/10 shadow-md shadow-brand-red/10 transition-all hover:scale-105 active:scale-95">
               {avatarLetter}
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-zinc-950 shadow-sm animate-pulse" />
           </button>
 
-          <button className="p-2.5 rounded-xl text-brand-red bg-rose-500/10 dark:bg-rose-500/10 border border-rose-500/20 sm:w-12 sm:h-12 flex items-center justify-center transition-all shadow-sm shadow-brand-red/5" title="Чаты" aria-label="Чаты">
-            <Icon name="chat" className="w-5 h-5" />
-          </button>
+          <div className="flex sm:flex-col gap-3 sm:gap-6 items-center">
+            <button className="p-2.5 rounded-xl text-brand-red bg-rose-500/10 dark:bg-rose-500/10 border border-rose-500/20 sm:w-12 sm:h-12 flex items-center justify-center transition-all shadow-sm shadow-brand-red/5" title="Чаты" aria-label="Чаты">
+              <Icon name="chat" className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="p-2.5 rounded-xl text-slate-400 dark:text-zinc-500 hover:text-brand-red hover:bg-rose-500/10 dark:hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 sm:w-12 sm:h-12 flex items-center justify-center transition-all active:scale-95"
+              title="Выйти из аккаунта"
+              aria-label="Выйти из аккаунта"
+            >
+              <Icon name="logout" className="w-5 h-5" />
+            </button>
+          </div>
 
           <button
-            onClick={handleLogout}
-            className="p-2.5 rounded-xl text-slate-400 dark:text-zinc-500 hover:text-brand-red hover:bg-rose-500/10 dark:hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 sm:w-12 sm:h-12 flex items-center justify-center transition-all active:scale-95"
-            title="Выйти из аккаунта"
-            aria-label="Выйти из аккаунта"
+            onClick={toggleTheme}
+            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 border border-slate-200/60 dark:border-zinc-800/60 transition-all text-base shadow-sm active:scale-95 flex sm:hidden items-center justify-center text-slate-600 dark:text-zinc-400"
+            title={theme === 'dark' ? 'Включить светлую тему' : 'Включить темную тему'}
+            aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить темную тему'}
           >
-            <Icon name="logout" className="w-5 h-5" />
+            <Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5" />
           </button>
         </div>
 
         <button
           onClick={toggleTheme}
-          className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 border border-slate-200/60 dark:border-zinc-800/60 transition-all text-base shadow-sm active:scale-95 sm:w-12 sm:h-12 flex items-center justify-center text-slate-600 dark:text-zinc-400"
+          className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 border border-slate-200/60 dark:border-zinc-800/60 transition-all text-base shadow-sm active:scale-95 hidden sm:flex sm:w-12 sm:h-12 items-center justify-center text-slate-600 dark:text-zinc-400"
           title={theme === 'dark' ? 'Включить светлую тему' : 'Включить темную тему'}
           aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить темную тему'}
         >
@@ -237,8 +248,8 @@ const Layout = () => {
 
       {showStatusInput && (
         <>
-          <button className="fixed inset-0 Brab-overlay z-30 bg-black/10 dark:bg-black/30 backdrop-blur-xs cursor-default transition-all" onClick={() => setShowStatusInput(false)} aria-label="Закрыть настройки статуса" />
-          <div className="fixed sm:absolute left-4 right-4 bottom-20 sm:bottom-auto sm:right-auto sm:top-18 sm:left-24 z-40 p-4 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xl shadow-black/5 dark:shadow-black/30 sm:w-72 animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-left-4 duration-200">
+          <button className="fixed inset-0 z-50 bg-black/10 dark:bg-black/30 backdrop-blur-xs cursor-default transition-all" onClick={() => setShowStatusInput(false)} aria-label="Закрыть настройки статуса" />
+          <div className="fixed sm:absolute left-4 right-4 top-18 sm:top-18 sm:left-24 z-50 p-4 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xl shadow-black/5 dark:shadow-black/30 sm:w-72 animate-in fade-in slide-in-from-top-4 duration-200">
             <p className="mb-3 text-sm font-bold text-slate-800 dark:text-zinc-100 truncate">{profileName}</p>
             <label className="block text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Твой текущий статус</label>
             <input
@@ -260,7 +271,7 @@ const Layout = () => {
         </>
       )}
 
-      <main className="flex-1 flex overflow-hidden relative z-10 bg-transparent h-[calc(100vh-4rem)] sm:h-full">
+      <main className="flex-1 min-h-0 min-w-0 flex overflow-hidden relative z-10 bg-transparent">
         <Outlet />
       </main>
     </div>
