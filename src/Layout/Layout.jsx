@@ -76,6 +76,7 @@ const Layout = () => {
     localStorage.setItem('theme', theme)
   }, [theme])
 
+  // Сбрасываем ошибку аватарки при ЛЮБОМ изменении ссылки в профиле
   useEffect(() => {
     if (userProfile?.avatar_url) {
       setAvatarError(false)
@@ -131,21 +132,26 @@ const Layout = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'USER_UPDATED' || event === 'SIGNED_IN') && session?.user && isMounted.current) {
+        
+        // Делаем небольшую задержку (таймаут), чтобы транзакция БД успела завершиться до чтения ссылки
+        setTimeout(async () => {
+          if (!isMounted.current) return;
+          
+          const { data: settingsData } = await supabase
+            .from('user_settings')
+            .select('avatar_url')
+            .eq('user_id', session.user.id)
+            .maybeSingle()
 
-        const { data: settingsData } = await supabase
-          .from('user_settings')
-          .select('avatar_url')
-          .eq('user_id', session.user.id)
-          .maybeSingle()
+          if (!isMounted.current) return
 
-        if (!isMounted.current) return
-
-        setUserProfile(prev => ({
-          ...prev,
-          username: session.user.user_metadata?.username || prev?.username,
-          avatar_url: settingsData?.avatar_url || session.user.user_metadata?.avatar_url || prev?.avatar_url
-        }))
-        setAvatarError(false) // Принудительно сбрасываем состояние ошибки отображения картинки
+          setUserProfile(prev => ({
+            ...prev,
+            username: session.user.user_metadata?.username || prev?.username,
+            avatar_url: settingsData?.avatar_url || session.user.user_metadata?.avatar_url || prev?.avatar_url
+          }))
+          setAvatarError(false) 
+        }, 200);
       }
     })
 
@@ -299,4 +305,4 @@ const Layout = () => {
   )
 }
 
-export default Layout
+export default Layout;

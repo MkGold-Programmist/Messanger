@@ -52,6 +52,7 @@ const Settings = ({ onBack }) => {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState('');
+  const [hasAvatarImageError, setHasAvatarImageError] = useState(false);
 
   useEffect(() => {
     const getUserData = async () => {
@@ -87,7 +88,12 @@ const Settings = ({ onBack }) => {
       }
     };
     getUserData();
-  }, []);
+
+    // Очистка URL превью при размонтировании компонента во избежание утечек памяти
+    return () => {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    };
+  }, [avatarPreview]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -96,8 +102,12 @@ const Settings = ({ onBack }) => {
         setMessage({ type: 'error', text: 'Размер файла не должен превышать 2 МБ' });
         return;
       }
+      // Удаляем старое превью из памяти перед созданием нового
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+
       setAvatarFile(file);
       setAvatarPreview(URL.createObjectURL(file));
+      setHasAvatarImageError(false);
     }
   };
 
@@ -107,6 +117,7 @@ const Settings = ({ onBack }) => {
     const fileExt = avatarFile.name.split('.').pop();
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = `avatars/${fileName}`;
+    
     const { error: uploadError } = await supabase.storage
       .from('chat-assets') 
       .upload(filePath, avatarFile, { upsert: true, cacheControl: '0' });
@@ -126,7 +137,7 @@ const Settings = ({ onBack }) => {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('Пользователь не авторизован');
 
-      const isPasswordTargeted = password.length > 0 && confirmPassword.length > 0;
+      const isPasswordTargeted = password.length > 0 || confirmPassword.length > 0;
 
       if (isPasswordTargeted) {
         if (password.length < 6) {
@@ -144,6 +155,7 @@ const Settings = ({ onBack }) => {
 
       const cleanUsername = username.trim();
 
+      // 1. Обновляем основную таблицу пользователей
       const { error: updateDbError } = await supabase
         .from('users')
         .upsert({
@@ -154,32 +166,17 @@ const Settings = ({ onBack }) => {
 
       if (updateDbError) throw updateDbError;
 
-      const { data: existingSettings, error: checkError } = await supabase
+      // 2. Оптимизированный красивый упсерт для настроек (вместо ручной проверки через select)
+      const { error: upsertSettingsError } = await supabase
         .from('user_settings')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .upsert({
+          user_id: user.id,
+          avatar_url: finalAvatarUrl
+        }, { onConflict: 'user_id' });
 
-      if (checkError) throw checkError;
+      if (upsertSettingsError) throw upsertSettingsError;
 
-      if (existingSettings) {
-        const { error: updateSettingsError } = await supabase
-          .from('user_settings')
-          .update({ avatar_url: finalAvatarUrl })
-          .eq('user_id', user.id);
-
-        if (updateSettingsError) throw updateSettingsError;
-      } else {
-        const { error: insertSettingsError } = await supabase
-          .from('user_settings')
-          .insert({
-            user_id: user.id,
-            avatar_url: finalAvatarUrl
-          });
-
-        if (insertSettingsError) throw insertSettingsError;
-      }
-
+      // 3. Подготовка данных для обновления в Supabase Auth
       const updates = {
         data: { 
           username: cleanUsername,
@@ -199,6 +196,7 @@ const Settings = ({ onBack }) => {
       setAvatarUrl(finalAvatarUrl);
       setAvatarPreview('');
       setAvatarFile(null);
+      setHasAvatarImageError(false);
       setPassword('');
       setConfirmPassword('');
       setMessage({ type: 'success', text: 'Профиль успешно сохранен!' });
@@ -222,10 +220,13 @@ const Settings = ({ onBack }) => {
     );
   }
 
+  const currentDisplayAvatar = avatarPreview || avatarUrl;
+
   return (
     <section className="flex-1 flex flex-col bg-slate-50 dark:bg-zinc-950 h-full w-full min-w-0 transition-colors duration-300">
       <header className="h-14 border-b border-slate-200/60 dark:border-zinc-900/80 px-4 flex items-center gap-3 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md flex-shrink-0 z-10 sticky top-0">
         <button 
+          type="button"
           onClick={onBack}
           className="flex items-center justify-center p-2 rounded-xl text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800/60 active:scale-95 transition-all cursor-pointer"
           aria-label="Назад к чатам"
@@ -252,18 +253,14 @@ const Settings = ({ onBack }) => {
         <form onSubmit={handleSaveSettings} className="space-y-5" autoComplete="off">
           <div className="bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-900 rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden shadow-xs">
             <div className="relative w-24 h-24 select-none mb-3">
-              {avatarPreview || avatarUrl ? (
+              {currentDisplayAvatar && !hasAvatarImageError ? (
                 <img 
-                  src={avatarPreview || avatarUrl} 
+                  src={currentDisplayAvatar} 
                   alt="Аватар" 
                   className="w-full h-full object-cover rounded-full ring-4 ring-slate-100 dark:ring-zinc-800 transition-transform duration-300"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
+                  onError={() => setHasAvatarImageError(true)}
                 />
-              ) : null}
-              
-              {(!avatarPreview && !avatarUrl) && (
+              ) : (
                 <div className="w-full h-full rounded-full bg-gradient-to-tr from-sky-500 to-blue-600 text-white font-bold text-3xl flex items-center justify-center shadow-md ring-4 ring-slate-100 dark:ring-zinc-800">
                   {getInitial()}
                 </div>
@@ -332,7 +329,6 @@ const Settings = ({ onBack }) => {
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Оставьте пустым"
-                  minLength={6}
                   autoComplete="new-password"
                   className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800/80 focus:border-sky-500 dark:focus:border-sky-400 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all text-slate-900 dark:text-zinc-100 font-medium placeholder-slate-400 dark:placeholder-zinc-600"
                 />
@@ -345,7 +341,6 @@ const Settings = ({ onBack }) => {
                   value={confirmPassword} 
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Оставьте пустым"
-                  minLength={6}
                   autoComplete="new-password"
                   className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800/80 focus:border-sky-500 dark:focus:border-sky-400 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all text-slate-900 dark:text-zinc-100 font-medium placeholder-slate-400 dark:placeholder-zinc-600"
                 />
