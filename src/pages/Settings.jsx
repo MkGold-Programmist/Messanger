@@ -59,7 +59,14 @@ const Settings = ({ onBack }) => {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           setEmail(user.email || '');
-          setUsername(user.user_metadata?.username || '');
+          
+          const { data: dbUser } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          setUsername(dbUser?.username || user.user_metadata?.username || '');
           
           const { data: settings } = await supabase
             .from('user_settings')
@@ -145,7 +152,7 @@ const Settings = ({ onBack }) => {
         }
       };
 
-      if (isPasswordTargeted && password === confirmPassword) {
+      if (isPasswordTargeted) {
         updates.password = password;
       }
 
@@ -157,8 +164,7 @@ const Settings = ({ onBack }) => {
         .upsert({
           id: user.id,
           username: cleanUsername,
-          email: user.email,
-          updated_at: new Date().toISOString()
+          email: user.email
         }, { onConflict: 'id' });
 
       if (updateDbError) throw updateDbError;
@@ -176,7 +182,7 @@ const Settings = ({ onBack }) => {
       setAvatarFile(null);
       setPassword('');
       setConfirmPassword('');
-      setMessage({ type: 'success', text: 'Профиль успешно сохранен' });
+      setMessage({ type: 'success', text: 'Профиль успешно сохранен!' });
       
       setTimeout(() => setMessage({ type: '', text: '' }), 4000);
 
@@ -199,7 +205,6 @@ const Settings = ({ onBack }) => {
 
   return (
     <section className="flex-1 flex flex-col bg-slate-50 dark:bg-zinc-950 h-full w-full min-w-0 transition-colors duration-300">
-
       <header className="h-14 border-b border-slate-200/60 dark:border-zinc-900/80 px-4 flex items-center gap-3 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md flex-shrink-0 z-10 sticky top-0">
         <button 
           onClick={onBack}
@@ -215,7 +220,6 @@ const Settings = ({ onBack }) => {
       </header>
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 max-w-xl w-full mx-auto space-y-5">
-        
         {message.text && (
           <div className={`p-3.5 rounded-xl border text-xs font-medium transition-all duration-300 animate-fade-in ${
             message.type === 'success' 
@@ -227,7 +231,6 @@ const Settings = ({ onBack }) => {
         )}
 
         <form onSubmit={handleSaveSettings} className="space-y-5" autoComplete="off">
-          
           <div className="bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-900 rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden shadow-xs">
             <div className="relative w-24 h-24 select-none mb-3">
               {avatarPreview || avatarUrl ? (
@@ -339,7 +342,6 @@ const Settings = ({ onBack }) => {
               )}
             </button>
           </div>
-
         </form>
       </div>
     </section>
