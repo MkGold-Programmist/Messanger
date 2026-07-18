@@ -77,6 +77,12 @@ const Layout = () => {
   }, [theme])
 
   useEffect(() => {
+    if (userProfile?.avatar_url) {
+      setAvatarError(false)
+    }
+  }, [userProfile?.avatar_url])
+
+  useEffect(() => {
     isMounted.current = true
     const fetchUserDataAndSettings = async () => {
       try {
@@ -129,7 +135,6 @@ const Layout = () => {
           username: session.user.user_metadata?.username || prev?.username,
           avatar_url: session.user.user_metadata?.avatar_url || prev?.avatar_url
         }))
-        setAvatarError(false);
       }
     })
 
