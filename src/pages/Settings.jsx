@@ -92,7 +92,7 @@ const Settings = ({ onBack }) => {
     return () => {
       if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     };
-  }, []);
+  }, [avatarPreview]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -116,14 +116,23 @@ const Settings = ({ onBack }) => {
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = `avatars/${fileName}`;
     
+    // 1. Загружаем файл в приватный бакет
     const { error: uploadError } = await supabase.storage
       .from('chat-assets') 
       .upload(filePath, avatarFile, { upsert: true, cacheControl: '0' });
   
     if (uploadError) throw uploadError;
   
-    const { data } = supabase.storage.from('chat-assets').getPublicUrl(filePath);
-    return data.publicUrl;
+    // 2. Генерируем подписанную ссылку (Signed URL) вместо Public URL
+    // Срок действия ставим большой (например, 10 лет в секундах), чтобы ссылка не "протухала"
+    const tenYearsInSeconds = 10 * 365 * 24 * 60 * 60;
+    const { data, error: signError } = await supabase.storage
+      .from('chat-assets')
+      .createSignedUrl(filePath, tenYearsInSeconds);
+
+    if (signError) throw signError;
+    
+    return data.signedUrl;
   };
 
   const handleSaveSettings = async (e) => {
@@ -148,7 +157,16 @@ const Settings = ({ onBack }) => {
 
       let finalAvatarUrl = avatarUrl;
       if (avatarFile) {
-        finalAvatarUrl = await uploadAvatar(user.id);
+        const uploadedUrl = await uploadAvatar(user.id);
+        
+        // Добавляем timestamp для сброса кэша картинок в браузере
+        try {
+          const urlObj = new URL(uploadedUrl);
+          urlObj.searchParams.set('t', Date.now().toString());
+          finalAvatarUrl = urlObj.toString();
+        } catch {
+          finalAvatarUrl = uploadedUrl;
+        }
       }
 
       const cleanUsername = username.trim();
