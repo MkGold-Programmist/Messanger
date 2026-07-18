@@ -54,6 +54,7 @@ const Layout = () => {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
   const [userProfile, setUserProfile] = useState(null)
   const [isProfileLoaded, setIsProfileLoaded] = useState(false)
+  const [avatarError, setAvatarError] = useState(false) 
   
   const userIdRef = useRef(null) 
   const isMounted = useRef(true)
@@ -95,18 +96,16 @@ const Layout = () => {
         if (!isMounted.current) return
         const fallbackTheme = localStorage.getItem('theme') || 'dark'
 
-        if (!profile) {
-          setUserProfile({ 
-            username: user.email?.split('@')[0], 
-            email: user.email,
-            avatar_url: user.user_metadata?.avatar_url || null
-          })
-          setTheme(fallbackTheme)
-          return
+
+        const mergedProfile = {
+          username: profile?.username || user.user_metadata?.username || user.email?.split('@')[0],
+          email: profile?.email || user.email,
+          avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url || null
         }
 
-        setUserProfile(profile)
+        setUserProfile(mergedProfile)
         setIsProfileLoaded(true) 
+        setAvatarError(false) 
 
         const { data: settingsData } = await supabase
           .from('user_settings')
@@ -121,8 +120,24 @@ const Layout = () => {
         console.error(err)
       }
     }
+
     fetchUserDataAndSettings()
-    return () => { isMounted.current = false }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'USER_UPDATED' && session?.user && isMounted.current) {
+        setUserProfile(prev => ({
+          ...prev,
+          username: session.user.user_metadata?.username || prev?.username,
+          avatar_url: session.user.user_metadata?.avatar_url || prev?.avatar_url
+        }))
+        setAvatarError(false);
+      }
+    })
+
+    return () => { 
+      isMounted.current = false 
+      subscription.unsubscribe()
+    }
   }, [navigate])
 
   const toggleTheme = async () => {
@@ -142,7 +157,7 @@ const Layout = () => {
 
   return (
     <div className="h-screen w-screen flex flex-col sm:flex-row overflow-hidden bg-slate-100 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 font-sans transition-colors duration-300">
-      
+
       {isInsideChat && !isSettingsPage && (
         <header className="flex sm:hidden h-14 w-full items-center justify-between px-4 border-b border-slate-200 dark:border-zinc-900 bg-white dark:bg-zinc-900 z-50 flex-shrink-0 shadow-xs">
           <div className="flex items-center gap-3">
@@ -185,10 +200,11 @@ const Layout = () => {
         <div className="flex flex-row sm:flex-col gap-1 sm:gap-5 items-center w-full justify-between sm:justify-start px-2 sm:px-0">
 
           <div className="relative flex-shrink-0 hidden sm:block mb-3 select-none">
-            {userProfile?.avatar_url ? (
+            {userProfile?.avatar_url && !avatarError ? (
               <img 
                 src={userProfile.avatar_url} 
                 alt="Профиль" 
+                onError={() => setAvatarError(true)} // Если ссылка битая, покажем букву-заглушку
                 className="w-11 h-11 rounded-full object-cover border-2 border-white dark:border-zinc-900 shadow-sm transition-transform hover:scale-105 duration-300"
               />
             ) : (
