@@ -153,9 +153,19 @@ const Layout = () => {
           if (!isMounted.current) return;
 
           const freshAvatar = settingsData?.avatar_url || session.user.user_metadata?.avatar_url || null;
-          
-          // Добавляем timestamp к URL, чтобы сбросить жесткое кэширование браузера (Cache Busting)
-          const finalAvatarUrl = freshAvatar ? `${freshAvatar}?t=${Date.now()}` : null;
+          let finalAvatarUrl = null;
+
+          if (freshAvatar) {
+            try {
+              // Умное добавление параметра времени без затирания токенов авторизации (?token=...)
+              const urlObj = new URL(freshAvatar);
+              urlObj.searchParams.set('t', Date.now().toString());
+              finalAvatarUrl = urlObj.toString();
+            } catch (e) {
+              // На случай, если в базе сохранён относительный путь, а не полный URL
+              finalAvatarUrl = freshAvatar;
+            }
+          }
 
           setUserProfile(prev => ({
             ...prev,
@@ -259,7 +269,7 @@ const Layout = () => {
                 ${
                   !isSettingsPage 
                     ? 'text-rose-500 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-950/20 font-medium sm:before:h-6 before:w-6 sm:before:w-[3px]' 
-                    : 'text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 hover:bg-slate-100/50 dark:hover:bg-zinc-800/40'
+                    : 'text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/40'
                 }
               `}
             >
