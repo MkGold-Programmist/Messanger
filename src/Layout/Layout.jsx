@@ -128,6 +128,7 @@ const Layout = () => {
 
     fetchUserDataAndSettings()
 
+    // СЛУШАТЕЛЬ ОБНОВЛЕНИЙ: ИСПРАВЛЕНО для мгновенного подхвата нового avatar_url из метаданных без перезагрузки
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'USER_UPDATED' && session?.user && isMounted.current) {
         setUserProfile(prev => ({

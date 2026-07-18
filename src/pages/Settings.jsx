@@ -145,6 +145,45 @@ const Settings = ({ onBack }) => {
 
       const cleanUsername = username.trim();
 
+      // 1. Сохраняем имя в public.users
+      const { error: updateDbError } = await supabase
+        .from('users')
+        .upsert({
+          id: user.id,
+          username: cleanUsername,
+          email: user.email
+        }, { onConflict: 'id' });
+
+      if (updateDbError) throw updateDbError;
+
+      // 2. ИСПРАВЛЕНО: Безопасное сохранение аватарки в user_settings через ручную проверку существования
+      const { data: existingSettings, error: checkError } = await supabase
+        .from('user_settings')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingSettings) {
+        const { error: updateSettingsError } = await supabase
+          .from('user_settings')
+          .update({ avatar_url: finalAvatarUrl })
+          .eq('user_id', user.id);
+
+        if (updateSettingsError) throw updateSettingsError;
+      } else {
+        const { error: insertSettingsError } = await supabase
+          .from('user_settings')
+          .insert({
+            user_id: user.id,
+            avatar_url: finalAvatarUrl
+          });
+
+        if (insertSettingsError) throw insertSettingsError;
+      }
+
+      // 3. ОБНОВЛЕНИЕ МЕТАДАННЫХ AUTH: Обязательно обновляем, чтобы триггерить событие onAuthStateChange в Layout
       const updates = {
         data: { 
           username: cleanUsername,
@@ -159,26 +198,8 @@ const Settings = ({ onBack }) => {
       const { error: updateAuthError } = await supabase.auth.updateUser(updates);
       if (updateAuthError) throw updateAuthError;
 
-      const { error: updateDbError } = await supabase
-        .from('users')
-        .upsert({
-          id: user.id,
-          username: cleanUsername,
-          email: user.email
-        }, { onConflict: 'id' });
-
-      if (updateDbError) throw updateDbError;
-
-      const { error: updateSettingsError } = await supabase
-        .from('user_settings')
-        .upsert({
-          user_id: user.id,
-          avatar_url: finalAvatarUrl
-        }, { onConflict: 'user_id' });
-
-      if (updateSettingsError) throw updateSettingsError;
-
       setAvatarUrl(finalAvatarUrl);
+      setAvatarPreview('');
       setAvatarFile(null);
       setPassword('');
       setConfirmPassword('');
