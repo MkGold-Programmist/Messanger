@@ -89,11 +89,10 @@ const Settings = ({ onBack }) => {
     };
     getUserData();
 
-    // Очистка URL превью при размонтировании компонента во избежание утечек памяти
     return () => {
       if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     };
-  }, [avatarPreview]);
+  }, []);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -102,7 +101,6 @@ const Settings = ({ onBack }) => {
         setMessage({ type: 'error', text: 'Размер файла не должен превышать 2 МБ' });
         return;
       }
-      // Удаляем старое превью из памяти перед созданием нового
       if (avatarPreview) URL.revokeObjectURL(avatarPreview);
 
       setAvatarFile(file);
@@ -166,7 +164,7 @@ const Settings = ({ onBack }) => {
 
       if (updateDbError) throw updateDbError;
 
-      // 2. Оптимизированный красивый упсерт для настроек (вместо ручной проверки через select)
+      // 2. Упсерт настроек пользователя
       const { error: upsertSettingsError } = await supabase
         .from('user_settings')
         .upsert({
@@ -176,7 +174,7 @@ const Settings = ({ onBack }) => {
 
       if (upsertSettingsError) throw upsertSettingsError;
 
-      // 3. Подготовка данных для обновления в Supabase Auth
+      // 3. Обновляем Auth метаданные
       const updates = {
         data: { 
           username: cleanUsername,
@@ -191,9 +189,11 @@ const Settings = ({ onBack }) => {
       const { error: updateAuthError } = await supabase.auth.updateUser(updates);
       if (updateAuthError) throw updateAuthError;
 
+      // Перезапускаем сессию для применения изменений
       await supabase.auth.refreshSession();
 
       setAvatarUrl(finalAvatarUrl);
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
       setAvatarPreview('');
       setAvatarFile(null);
       setHasAvatarImageError(false);

@@ -1,7 +1,7 @@
-import React, { useEffect, useLayoutEffect, useState, useRef } from 'react'
-import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { supabase } from '../supabaseClient'
-import { useChatState } from '../context/ChatContext'
+import React, { useEffect, useLayoutEffect, useState, useRef } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
+import { useChatState } from '../context/ChatContext';
 
 const ICON_PATHS = {
   chat: <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />,
@@ -33,7 +33,7 @@ const ICON_PATHS = {
   ),
   moon: <path d="M20.99 12.55A9 9 0 1 1 11.45 3a7 7 0 0 0 9.54 9.55z" />,
   back: <path d="M19 12H5M12 19l-7-7 7-7" />,
-}
+};
 
 const Icon = ({ name, className = 'w-5 h-5' }) => (
   <svg 
@@ -48,133 +48,145 @@ const Icon = ({ name, className = 'w-5 h-5' }) => (
   >
     {ICON_PATHS[name]}
   </svg>
-)
+);
 
 const Layout = () => {
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
-  const [userProfile, setUserProfile] = useState(null)
-  const [isProfileLoaded, setIsProfileLoaded] = useState(false)
-  const [avatarError, setAvatarError] = useState(false) 
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+  const [userProfile, setUserProfile] = useState(null);
+  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
+  const [avatarError, setAvatarError] = useState(false); 
   
-  const userIdRef = useRef(null) 
-  const isMounted = useRef(true)
-  const navigate = useNavigate()
-  const location = useLocation()
+  const userIdRef = useRef(null); 
+  const isMounted = useRef(true);
+  const navigate = useNavigate();
+  const location = useLocation();
   
-  const { activeChatName, setActiveChatName } = useChatState()
-  const isInsideChat = !!activeChatName
+  const { activeChatName, setActiveChatName } = useChatState();
+  const isInsideChat = !!activeChatName;
 
   useLayoutEffect(() => {
-    const root = window.document.documentElement
+    const root = window.document.documentElement;
     if (theme === 'dark') {
-      root.classList.add('dark')
-      root.style.colorScheme = 'dark'
+      root.classList.add('dark');
+      root.style.colorScheme = 'dark';
     } else {
-      root.classList.remove('dark')
-      root.style.colorScheme = 'light'
+      root.classList.remove('dark');
+      root.style.colorScheme = 'light';
     }
-    localStorage.setItem('theme', theme)
-  }, [theme])
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
-  // Сбрасываем ошибку аватарки при ЛЮБОМ изменении ссылки в профиле
   useEffect(() => {
     if (userProfile?.avatar_url) {
-      setAvatarError(false)
+      setAvatarError(false);
     }
-  }, [userProfile?.avatar_url])
+  }, [userProfile?.avatar_url]);
 
   useEffect(() => {
-    isMounted.current = true
+    isMounted.current = true;
     
     const fetchUserDataAndSettings = async () => {
       try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
-          if (isMounted.current) navigate('/login')
-          return
+          if (isMounted.current) navigate('/login');
+          return;
         }
-        userIdRef.current = user.id
+        userIdRef.current = user.id;
 
         const { data: profile } = await supabase
           .from('users')
           .select('username, email')
           .eq('id', user.id)
-          .maybeSingle()
+          .maybeSingle();
 
         const { data: settingsData } = await supabase
           .from('user_settings')
           .select('theme, avatar_url')
           .eq('user_id', user.id)
-          .maybeSingle()
+          .maybeSingle();
 
-        if (!isMounted.current) return
-        const fallbackTheme = localStorage.getItem('theme') || 'dark'
+        if (!isMounted.current) return;
+        const fallbackTheme = localStorage.getItem('theme') || 'dark';
 
         const mergedProfile = {
           username: profile?.username || user.user_metadata?.username || user.email?.split('@')[0],
           email: profile?.email || user.email,
           avatar_url: settingsData?.avatar_url || user.user_metadata?.avatar_url || null
-        }
+        };
 
-        setUserProfile(mergedProfile)
-        setIsProfileLoaded(true) 
-        setAvatarError(false) 
+        setUserProfile(mergedProfile);
+        setIsProfileLoaded(true); 
+        setAvatarError(false); 
 
         if (settingsData && isMounted.current) {
-          setTheme(settingsData.theme || fallbackTheme)
+          setTheme(settingsData.theme || fallbackTheme);
         }
       } catch (err) {
-        console.error(err)
+        console.error(err);
       }
-    }
+    };
 
-    fetchUserDataAndSettings()
+    fetchUserDataAndSettings();
 
+    // Слушатель событий изменения аккаунта (включая updateUser)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'USER_UPDATED' || event === 'SIGNED_IN') && session?.user && isMounted.current) {
         
-        // Делаем небольшую задержку (таймаут), чтобы транзакция БД успела завершиться до чтения ссылки
+        // Маленький таймаут для гарантии успешной транзакции на стороне бэкенда Supabase
         setTimeout(async () => {
           if (!isMounted.current) return;
           
+          // Запрашиваем актуальные данные НАПРЯМУЮ ИЗ БД, а не из сессии клиента
+          const { data: dbUser } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
           const { data: settingsData } = await supabase
             .from('user_settings')
             .select('avatar_url')
             .eq('user_id', session.user.id)
-            .maybeSingle()
+            .maybeSingle();
 
-          if (!isMounted.current) return
+          if (!isMounted.current) return;
+
+          const freshAvatar = settingsData?.avatar_url || session.user.user_metadata?.avatar_url || null;
+          
+          // Добавляем timestamp к URL, чтобы сбросить жесткое кэширование браузера (Cache Busting)
+          const finalAvatarUrl = freshAvatar ? `${freshAvatar}?t=${Date.now()}` : null;
 
           setUserProfile(prev => ({
             ...prev,
-            username: session.user.user_metadata?.username || prev?.username,
-            avatar_url: settingsData?.avatar_url || session.user.user_metadata?.avatar_url || prev?.avatar_url
-          }))
-          setAvatarError(false) 
-        }, 200);
+            username: dbUser?.username || session.user.user_metadata?.username || prev?.username,
+            avatar_url: finalAvatarUrl
+          }));
+          setAvatarError(false); 
+        }, 250);
       }
-    })
+    });
 
     return () => { 
-      isMounted.current = false 
-      subscription.unsubscribe()
-    }
-  }, [navigate])
+      isMounted.current = false; 
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   const toggleTheme = async () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(nextTheme)
-    if (!userIdRef.current || !isProfileLoaded) return
-    await supabase.from('user_settings').upsert({ user_id: userIdRef.current, theme: nextTheme }, { onConflict: 'user_id' })
-  }
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    if (!userIdRef.current || !isProfileLoaded) return;
+    await supabase.from('user_settings').upsert({ user_id: userIdRef.current, theme: nextTheme }, { onConflict: 'user_id' });
+  };
 
   const handleLogout = async () => {
-    try { await supabase.auth.signOut() } finally { navigate('/login') }
-  }
+    try { await supabase.auth.signOut(); } finally { navigate('/login'); }
+  };
 
-  const avatarLetter = userProfile?.username ? userProfile.username[0].toUpperCase() : '?'
-  const chatAvatarLetter = activeChatName ? activeChatName[0].toUpperCase() : '?'
-  const isSettingsPage = location.pathname === '/settings'
+  const avatarLetter = userProfile?.username ? userProfile.username[0].toUpperCase() : '?';
+  const chatAvatarLetter = activeChatName ? activeChatName[0].toUpperCase() : '?';
+  const isSettingsPage = location.pathname === '/settings';
 
   return (
     <div className="h-screen w-screen flex flex-col sm:flex-row overflow-hidden bg-slate-100 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 font-sans transition-colors duration-300">
@@ -302,7 +314,7 @@ const Layout = () => {
       </aside>
 
     </div>
-  )
-}
+  );
+};
 
 export default Layout;
