@@ -1,10 +1,16 @@
 import React, { useEffect, useLayoutEffect, useState, useRef } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useChatState } from '../context/ChatContext'
 
 const ICON_PATHS = {
   chat: <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />,
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </>
+  ),
   logout: (
     <>
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -47,14 +53,12 @@ const Icon = ({ name, className = 'w-5 h-5' }) => (
 const Layout = () => {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
   const [userProfile, setUserProfile] = useState(null)
-  const [statusText, setStatusText] = useState('')
-  const [showStatusInput, setShowStatusInput] = useState(false)
-  const [savingStatus, setSavingStatus] = useState(false)
   const [isProfileLoaded, setIsProfileLoaded] = useState(false)
   
   const userIdRef = useRef(null) 
   const isMounted = useRef(true)
   const navigate = useNavigate()
+  const location = useLocation()
   
   const { activeChatName, setActiveChatName } = useChatState()
   const isInsideChat = !!activeChatName
@@ -102,13 +106,12 @@ const Layout = () => {
 
         const { data: settingsData } = await supabase
           .from('user_settings')
-          .select('theme, status_text')
+          .select('theme')
           .eq('user_id', user.id)
           .maybeSingle()
 
         if (settingsData && isMounted.current) {
           setTheme(settingsData.theme || fallbackTheme)
-          setStatusText(settingsData.status_text || '')
         }
       } catch (err) {
         console.error(err)
@@ -125,15 +128,6 @@ const Layout = () => {
     await supabase.from('user_settings').upsert({ user_id: userIdRef.current, theme: nextTheme }, { onConflict: 'user_id' })
   }
 
-  const handleSaveStatus = async () => {
-    if (!userIdRef.current || !isProfileLoaded) return
-    setSavingStatus(true)
-    const cleanStatus = statusText.trim().slice(0, 80)
-    await supabase.from('user_settings').upsert({ user_id: userIdRef.current, status_text: cleanStatus, theme }, { onConflict: 'user_id' })
-    setSavingStatus(false)
-    setShowStatusInput(false)
-  }
-
   const handleLogout = async () => {
     try { await supabase.auth.signOut() } finally { navigate('/login') }
   }
@@ -141,10 +135,11 @@ const Layout = () => {
   const avatarLetter = userProfile?.username ? userProfile.username[0].toUpperCase() : '?'
   const chatAvatarLetter = activeChatName ? activeChatName[0].toUpperCase() : '?'
 
+  const isSettingsPage = location.pathname === '/settings'
+
   return (
     <div className="h-screen w-screen flex flex-col sm:flex-row overflow-hidden bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
-      
-      {isInsideChat && (
+      {isInsideChat && !isSettingsPage && (
         <header className="flex sm:hidden h-16 w-full items-center justify-between px-4 border-b border-slate-200 dark:border-zinc-900 bg-white dark:bg-zinc-900 z-50 flex-shrink-0">
           <div className="flex items-center gap-3">
             <button 
@@ -172,16 +167,35 @@ const Layout = () => {
       <aside className={`${isInsideChat ? 'hidden sm:flex' : 'flex'} h-16 sm:h-full w-full sm:w-20 sm:flex-col items-center justify-between px-4 sm:px-0 sm:py-6 border-b sm:border-b-0 sm:border-r border-slate-200 dark:border-zinc-900 bg-white dark:bg-zinc-900 flex-shrink-0 z-40 transition-all duration-300`}>
         <div className="flex sm:flex-col gap-4 sm:gap-6 items-center w-full justify-between sm:justify-start px-2 sm:px-0">
           
-          <button className="relative cursor-pointer flex-shrink-0 group" onClick={() => setShowStatusInput(!showStatusInput)}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-red to-rose-500 text-white flex items-center justify-center font-bold shadow-md transition-all group-hover:scale-105 active:scale-95">
+          <div className="relative flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-red to-rose-500 text-white flex items-center justify-center font-bold shadow-md">
               {avatarLetter}
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-zinc-900" />
-          </button>
+          </div>
 
           <div className="flex sm:flex-col gap-3 sm:gap-4 items-center">
-            <button className="p-2.5 rounded-xl text-brand-red bg-rose-500/10 border border-rose-500/20 sm:w-12 sm:h-12 flex items-center justify-center shadow-sm">
+            <button 
+              onClick={() => { setActiveChatName(null); navigate('/'); }}
+              className={`p-2.5 rounded-xl border sm:w-12 sm:h-12 flex items-center justify-center transition-all ${
+                !isSettingsPage 
+                  ? 'text-brand-red bg-rose-500/10 border-rose-500/20 shadow-sm' 
+                  : 'text-slate-400 dark:text-zinc-500 border-transparent hover:text-slate-600 dark:hover:text-zinc-300'
+              }`}
+            >
               <Icon name="chat" className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={() => navigate('/settings')}
+              className={`p-2.5 rounded-xl border sm:w-12 sm:h-12 flex items-center justify-center transition-all ${
+                isSettingsPage 
+                  ? 'text-brand-red bg-rose-500/10 border-rose-500/20 shadow-sm' 
+                  : 'text-slate-400 dark:text-zinc-500 border-transparent hover:text-slate-600 dark:hover:text-zinc-300'
+              }`}
+              title="Настройки"
+            >
+              <Icon name="settings" className="w-5 h-5" />
             </button>
 
             <button
@@ -202,29 +216,6 @@ const Layout = () => {
           <Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5" />
         </button>
       </aside>
-
-      {showStatusInput && (
-        <>
-          <button className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowStatusInput(false)} />
-          <div className="fixed sm:absolute left-4 right-4 top-18 sm:top-18 sm:left-24 z-50 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl sm:w-72 animate-in fade-in slide-in-from-top-4 duration-200">
-            <p className="mb-3 text-sm font-bold truncate">{userProfile?.username || 'Профиль'}</p>
-            <input
-              type="text"
-              value={statusText}
-              onChange={(e) => setStatusText(e.target.value)}
-              maxLength={80}
-              placeholder="Что нового?"
-              className="w-full p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-slate-100 outline-none focus:border-brand-red/50 transition-all"
-            />
-            <div className="flex justify-end gap-2 mt-3">
-              <button onClick={() => setShowStatusInput(false)} className="text-xs px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-400">Отмена</button>
-              <button onClick={handleSaveStatus} className="text-xs px-3 py-1.5 rounded-lg bg-brand-red text-white font-medium">
-                {savingStatus ? '...' : 'Сохранить'}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
 
       <main className="flex-1 min-w-0 flex overflow-hidden relative bg-transparent h-full">
         <Outlet />

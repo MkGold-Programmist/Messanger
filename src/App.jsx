@@ -5,13 +5,13 @@ import Home from './pages/Home'
 import Layout from './Layout/Layout'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Settings from './pages/Settings'
 import { ChatProvider } from './context/ChatContext'
 
 const ProtectedRoute = ({ children, session }) => {
   if (!session) {
     return <Navigate to="/login" replace />
   }
-
   return children
 }
 
@@ -45,7 +45,6 @@ const App = () => {
       path: '/',
       element: (
         <ProtectedRoute session={session}>
-          {/* Оборачиваем Layout и все его дочерние элементы (включая Home) в ChatProvider */}
           <ChatProvider>
             <Layout />
           </ChatProvider>
@@ -55,6 +54,10 @@ const App = () => {
         {
           index: true,
           element: <Home />,
+        },
+        {
+          path: 'settings', 
+          element: <Settings />,
         },
       ],
     },
