@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useChatState } from '../context/ChatContext'
 
+
 const ICON_PATHS = {
   chat: <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />,
   settings: (
@@ -138,27 +139,27 @@ const Layout = () => {
   const isSettingsPage = location.pathname === '/settings'
 
   return (
-    <div className="h-screen w-screen flex flex-col sm:flex-row overflow-hidden bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
+    <div className="h-screen w-screen flex flex-col sm:flex-row overflow-hidden bg-slate-100 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 font-sans transition-colors duration-300">
       
       {isInsideChat && !isSettingsPage && (
-        <header className="flex sm:hidden h-14 w-full items-center justify-between px-4 border-b border-slate-200/80 dark:border-zinc-900 bg-white dark:bg-zinc-900 z-50 flex-shrink-0 shadow-3xs">
+        <header className="flex sm:hidden h-14 w-full items-center justify-between px-4 border-b border-slate-200 dark:border-zinc-900 bg-white dark:bg-zinc-900 z-50 flex-shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setActiveChatName(null)}
-              className="p-2 -ml-2 rounded-xl text-slate-500 dark:text-zinc-400 active:bg-slate-100 dark:active:bg-zinc-800 transition-colors"
+              className="p-2 -ml-2 rounded-full text-slate-500 dark:text-zinc-400 active:bg-slate-100 dark:active:bg-zinc-800 transition-colors"
               aria-label="Назад к списку чатов"
             >
               <Icon name="back" className="w-5 h-5" />
             </button>
             
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-red to-rose-500 text-white flex items-center justify-center font-bold shadow-xs">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white flex items-center justify-center font-semibold text-sm shadow-sm">
               {chatAvatarLetter}
             </div>
 
             <div>
-              <p className="text-xs font-bold tracking-tight max-w-[180px] truncate">{activeChatName}</p>
-              <p className="text-[10px] text-emerald-500 dark:text-emerald-400 font-bold flex items-center gap-1 mt-0.5 uppercase tracking-wider">
-                <span className="w-1 h-1 rounded-full bg-emerald-500" /> в сети
+              <p className="text-sm font-semibold tracking-tight max-w-[180px] truncate">{activeChatName}</p>
+              <p className="text-[11px] text-sky-500 dark:text-sky-400 font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-500 dark:bg-sky-400 animate-pulse" /> в сети
               </p>
             </div>
           </div>
@@ -171,64 +172,64 @@ const Layout = () => {
 
       <aside className={`
         ${isInsideChat ? 'hidden sm:flex' : 'flex'} 
-        fixed bottom-0 left-0 right-0 h-16 w-full border-t 
+        fixed bottom-0 left-0 right-0 h-16 w-full border-t
         sm:relative sm:bottom-auto sm:left-auto sm:right-auto sm:h-full sm:w-20 sm:border-t-0 sm:border-r 
-        flex-row sm:flex-col items-center justify-between px-6 sm:px-0 sm:py-6 
-        border-slate-200/80 dark:border-zinc-800/80 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md
-        z-40 flex-shrink-0 transition-all duration-300 order-2 sm:order-1 shadow-lg sm:shadow-none
+        flex-row sm:flex-col items-center justify-between px-2 sm:px-0 sm:py-5 
+        border-slate-200 dark:border-zinc-900 bg-white/90 dark:bg-zinc-900/95 backdrop-blur-lg
+        z-40 flex-shrink-0 transition-all duration-300 order-2 sm:order-1 shadow-xl sm:shadow-none
       `}>
         
-        <div className="flex flex-row sm:flex-col gap-2 sm:gap-6 items-center w-full justify-between sm:justify-start px-0 sm:px-2">
-      
-          <div className="relative flex-shrink-0 hidden sm:block mb-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-red to-rose-500 text-white flex items-center justify-center font-bold shadow-md">
+        <div className="flex flex-row sm:flex-col gap-1 sm:gap-5 items-center w-full justify-between sm:justify-start px-2 sm:px-0">
+
+          <div className="relative flex-shrink-0 hidden sm:block mb-3">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
               {avatarLetter}
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-zinc-900" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-zinc-900" />
           </div>
 
-          <div className="flex flex-row sm:flex-col gap-1 sm:gap-3.5 items-center w-full justify-around sm:justify-center">
-            {/* Кнопка Чаты */}
+          <div className="flex flex-row sm:flex-col gap-1 sm:gap-3 items-center w-full justify-around sm:justify-center">
+
             <button 
               onClick={() => { setActiveChatName(null); navigate('/'); }}
-              className={`p-2.5 sm:p-3 rounded-xl sm:w-12 sm:h-12 flex flex-col sm:flex-row items-center justify-center transition-all duration-200 relative group cursor-pointer ${
+              className={`p-2.5 sm:p-3 rounded-xl sm:w-12 sm:h-12 flex flex-col items-center justify-center transition-all duration-200 relative group cursor-pointer ${
                 !isSettingsPage 
-                  ? 'text-brand-red bg-rose-500/10 border border-rose-500/20 shadow-xs' 
-                  : 'text-slate-400 dark:text-zinc-500 border border-transparent hover:text-slate-600 dark:hover:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/40'
+                  ? 'text-sky-500 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 font-medium' 
+                  : 'text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800/60'
               }`}
             >
-              <Icon name="chat" className="w-5 h-5 transition-transform group-active:scale-90" />
-              <span className="text-[9px] sm:hidden font-medium mt-0.5">Чаты</span>
+              <Icon name="chat" className="w-5 h-5 transition-transform group-active:scale-95" />
+              <span className="text-[10px] sm:hidden font-medium mt-0.5 tracking-tight">Чаты</span>
             </button>
 
             <button
               onClick={() => navigate('/settings')}
-              className={`p-2.5 sm:p-3 rounded-xl sm:w-12 sm:h-12 flex flex-col sm:flex-row items-center justify-center transition-all duration-200 relative group cursor-pointer ${
+              className={`p-2.5 sm:p-3 rounded-xl sm:w-12 sm:h-12 flex flex-col items-center justify-center transition-all duration-200 relative group cursor-pointer ${
                 isSettingsPage 
-                  ? 'text-brand-red bg-rose-500/10 border border-rose-500/20 shadow-xs' 
-                  : 'text-slate-400 dark:text-zinc-500 border border-transparent hover:text-slate-600 dark:hover:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/40'
+                  ? 'text-sky-500 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 font-medium' 
+                  : 'text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800/60'
               }`}
               title="Настройки"
             >
-              <Icon name="settings" className="w-5 h-5 transition-transform group-active:scale-90" />
-              <span className="text-[9px] sm:hidden font-medium mt-0.5">Настройки</span>
+              <Icon name="settings" className="w-5 h-5 transition-transform group-active:scale-95" />
+              <span className="text-[10px] sm:hidden font-medium mt-0.5 tracking-tight">Настройки</span>
             </button>
 
             <button 
               onClick={toggleTheme} 
-              className="p-2.5 rounded-xl flex flex-col items-center justify-center text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 sm:hidden cursor-pointer"
+              className="p-2.5 rounded-xl flex flex-col items-center justify-center text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 sm:hidden cursor-pointer active:scale-95 transition-transform"
             >
               <Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5" />
-              <span className="text-[9px] font-medium mt-0.5">Тема</span>
+              <span className="text-[10px] font-medium mt-0.5 tracking-tight">Тема</span>
             </button>
 
             <button
               onClick={handleLogout}
-              className="p-2.5 sm:p-3 rounded-xl text-slate-400 dark:text-zinc-500 hover:text-brand-red hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 sm:w-12 sm:h-12 flex flex-col sm:flex-row items-center justify-center transition-all active:scale-95 cursor-pointer"
+              className="p-2.5 sm:p-3 rounded-xl text-slate-400 dark:text-zinc-500 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 sm:w-12 sm:h-12 flex flex-col items-center justify-center transition-all active:scale-95 cursor-pointer"
               title="Выйти"
             >
               <Icon name="logout" className="w-5 h-5" />
-              <span className="text-[9px] sm:hidden font-medium mt-0.5">Выйти</span>
+              <span className="text-[10px] sm:hidden font-medium mt-0.5 tracking-tight">Выйти</span>
             </button>
           </div>
 
@@ -236,7 +237,7 @@ const Layout = () => {
 
         <button 
           onClick={toggleTheme} 
-          className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 border border-slate-200/60 dark:border-zinc-700 hidden sm:flex sm:w-12 sm:h-12 items-center justify-center text-slate-600 dark:text-zinc-400 transition-all active:scale-95 cursor-pointer"
+          className="p-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 border border-slate-200/50 dark:border-zinc-700/50 hidden sm:flex sm:w-12 sm:h-12 items-center justify-center text-slate-500 dark:text-zinc-400 transition-all active:scale-95 cursor-pointer"
         >
           <Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5" />
         </button>
