@@ -76,7 +76,6 @@ const Layout = () => {
     localStorage.setItem('theme', theme)
   }, [theme])
 
-  // Если URL аватарки поменялся, сбрасываем ошибку, чтобы дать тегу img шанс отрендерить её снова
   useEffect(() => {
     if (userProfile?.avatar_url) {
       setAvatarError(false)
@@ -130,11 +129,9 @@ const Layout = () => {
 
     fetchUserDataAndSettings()
 
-    // НАДЕЖНЫЙ СЛУШАТЕЛЬ ОБНОВЛЕНИЙ: При изменении данных сессии делаем быстрый точечный запрос в базу
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'USER_UPDATED' || event === 'SIGNED_IN') && session?.user && isMounted.current) {
-        
-        // Подстраховываемся и запрашиваем прямой актуальный URL аватарки из базы
+
         const { data: settingsData } = await supabase
           .from('user_settings')
           .select('avatar_url')

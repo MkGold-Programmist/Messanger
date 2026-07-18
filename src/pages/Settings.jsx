@@ -108,12 +108,12 @@ const Settings = ({ onBack }) => {
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = `avatars/${fileName}`;
     const { error: uploadError } = await supabase.storage
-      .from('CHAT-ASSETS') 
+      .from('chat-assets') 
       .upload(filePath, avatarFile, { upsert: true, cacheControl: '0' });
   
     if (uploadError) throw uploadError;
   
-    const { data } = supabase.storage.from('CHAT-ASSETS').getPublicUrl(filePath);
+    const { data } = supabase.storage.from('chat-assets').getPublicUrl(filePath);
     return data.publicUrl;
   };
 
