@@ -60,7 +60,18 @@ const Settings = ({ onBack }) => {
         if (user) {
           setEmail(user.email || '');
           setUsername(user.user_metadata?.username || '');
-          setAvatarUrl(user.user_metadata?.avatar_url || '');
+          
+          const { data: settings } = await supabase
+            .from('user_settings')
+            .select('avatar_url')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (settings?.avatar_url) {
+            setAvatarUrl(settings.avatar_url);
+          } else {
+            setAvatarUrl(user.user_metadata?.avatar_url || '');
+          }
         }
       } catch (err) {
         console.error('Ошибка загрузки профиля:', err);
@@ -111,10 +122,6 @@ const Settings = ({ onBack }) => {
 
       const isPasswordTargeted = password.length > 0 && confirmPassword.length > 0;
 
-      if (password && !confirmPassword && password.length > 0) {
-
-      }
-
       if (isPasswordTargeted) {
         if (password.length < 6) {
           throw new Error('Новый пароль должен быть не менее 6 символов');
@@ -151,11 +158,19 @@ const Settings = ({ onBack }) => {
           id: user.id,
           username: cleanUsername,
           email: user.email,
-          avatar_url: finalAvatarUrl,
           updated_at: new Date().toISOString()
         }, { onConflict: 'id' });
 
       if (updateDbError) throw updateDbError;
+
+      const { error: updateSettingsError } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          avatar_url: finalAvatarUrl
+        }, { onConflict: 'user_id' });
+
+      if (updateSettingsError) throw updateSettingsError;
 
       setAvatarUrl(finalAvatarUrl);
       setAvatarFile(null);

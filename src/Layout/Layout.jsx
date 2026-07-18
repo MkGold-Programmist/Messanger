@@ -89,29 +89,28 @@ const Layout = () => {
 
         const { data: profile } = await supabase
           .from('users')
-          .select('username, email, avatar_url')
+          .select('username, email')
           .eq('id', user.id)
+          .maybeSingle()
+
+        const { data: settingsData } = await supabase
+          .from('user_settings')
+          .select('theme, avatar_url')
+          .eq('user_id', user.id)
           .maybeSingle()
 
         if (!isMounted.current) return
         const fallbackTheme = localStorage.getItem('theme') || 'dark'
 
-
         const mergedProfile = {
           username: profile?.username || user.user_metadata?.username || user.email?.split('@')[0],
           email: profile?.email || user.email,
-          avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url || null
+          avatar_url: settingsData?.avatar_url || user.user_metadata?.avatar_url || null
         }
 
         setUserProfile(mergedProfile)
         setIsProfileLoaded(true) 
         setAvatarError(false) 
-
-        const { data: settingsData } = await supabase
-          .from('user_settings')
-          .select('theme')
-          .eq('user_id', user.id)
-          .maybeSingle()
 
         if (settingsData && isMounted.current) {
           setTheme(settingsData.theme || fallbackTheme)
@@ -204,7 +203,7 @@ const Layout = () => {
               <img 
                 src={userProfile.avatar_url} 
                 alt="Профиль" 
-                onError={() => setAvatarError(true)} // Если ссылка битая, покажем букву-заглушку
+                onError={() => setAvatarError(true)}
                 className="w-11 h-11 rounded-full object-cover border-2 border-white dark:border-zinc-900 shadow-sm transition-transform hover:scale-105 duration-300"
               />
             ) : (
