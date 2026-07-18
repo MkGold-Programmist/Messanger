@@ -76,6 +76,7 @@ const Layout = () => {
     localStorage.setItem('theme', theme)
   }, [theme])
 
+  // Если URL аватарки поменялся, сбрасываем ошибку, чтобы дать тегу img шанс отрендерить её снова
   useEffect(() => {
     if (userProfile?.avatar_url) {
       setAvatarError(false)
@@ -84,6 +85,7 @@ const Layout = () => {
 
   useEffect(() => {
     isMounted.current = true
+    
     const fetchUserDataAndSettings = async () => {
       try {
         const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -128,14 +130,25 @@ const Layout = () => {
 
     fetchUserDataAndSettings()
 
-    // СЛУШАТЕЛЬ ОБНОВЛЕНИЙ: ИСПРАВЛЕНО для мгновенного подхвата нового avatar_url из метаданных без перезагрузки
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'USER_UPDATED' && session?.user && isMounted.current) {
+    // НАДЕЖНЫЙ СЛУШАТЕЛЬ ОБНОВЛЕНИЙ: При изменении данных сессии делаем быстрый точечный запрос в базу
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if ((event === 'USER_UPDATED' || event === 'SIGNED_IN') && session?.user && isMounted.current) {
+        
+        // Подстраховываемся и запрашиваем прямой актуальный URL аватарки из базы
+        const { data: settingsData } = await supabase
+          .from('user_settings')
+          .select('avatar_url')
+          .eq('user_id', session.user.id)
+          .maybeSingle()
+
+        if (!isMounted.current) return
+
         setUserProfile(prev => ({
           ...prev,
           username: session.user.user_metadata?.username || prev?.username,
-          avatar_url: session.user.user_metadata?.avatar_url || prev?.avatar_url
+          avatar_url: settingsData?.avatar_url || session.user.user_metadata?.avatar_url || prev?.avatar_url
         }))
+        setAvatarError(false) // Принудительно сбрасываем состояние ошибки отображения картинки
       }
     })
 

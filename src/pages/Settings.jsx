@@ -145,7 +145,7 @@ const Settings = ({ onBack }) => {
 
       const cleanUsername = username.trim();
 
-      // 1. Сохраняем имя в public.users
+      // 1. Сохраняем в public.users
       const { error: updateDbError } = await supabase
         .from('users')
         .upsert({
@@ -156,7 +156,7 @@ const Settings = ({ onBack }) => {
 
       if (updateDbError) throw updateDbError;
 
-      // 2. ИСПРАВЛЕНО: Безопасное сохранение аватарки в user_settings через ручную проверку существования
+      // 2. Сохраняем в user_settings
       const { data: existingSettings, error: checkError } = await supabase
         .from('user_settings')
         .select('user_id')
@@ -175,15 +175,12 @@ const Settings = ({ onBack }) => {
       } else {
         const { error: insertSettingsError } = await supabase
           .from('user_settings')
-          .insert({
-            user_id: user.id,
-            avatar_url: finalAvatarUrl
-          });
+          .insert({ user_id: user.id, avatar_url: finalAvatarUrl });
 
         if (insertSettingsError) throw insertSettingsError;
       }
 
-      // 3. ОБНОВЛЕНИЕ МЕТАДАННЫХ AUTH: Обязательно обновляем, чтобы триггерить событие onAuthStateChange в Layout
+      // 3. Обновляем метаданные Auth
       const updates = {
         data: { 
           username: cleanUsername,
@@ -197,6 +194,10 @@ const Settings = ({ onBack }) => {
 
       const { error: updateAuthError } = await supabase.auth.updateUser(updates);
       if (updateAuthError) throw updateAuthError;
+
+      // КЛЮЧЕВОЙ МОМЕНТ: Форсируем обновление локальной сессии, 
+      // чтобы сработал триггер USER_UPDATED в Layout с новыми данными
+      await supabase.auth.refreshSession();
 
       setAvatarUrl(finalAvatarUrl);
       setAvatarPreview('');
