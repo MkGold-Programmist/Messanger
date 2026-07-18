@@ -110,7 +110,7 @@ const Settings = ({ onBack }) => {
 
     const { error: uploadError } = await supabase.storage
       .from('chat-assets') 
-      .upload(filePath, avatarFile, { upsert: true, cacheControl: '3600' });
+      .upload(filePath, avatarFile, { upsert: true, cacheControl: '0' });
 
     if (uploadError) throw uploadError;
 
@@ -145,7 +145,6 @@ const Settings = ({ onBack }) => {
 
       const cleanUsername = username.trim();
 
-      // 1. Сохраняем в public.users
       const { error: updateDbError } = await supabase
         .from('users')
         .upsert({
@@ -156,7 +155,6 @@ const Settings = ({ onBack }) => {
 
       if (updateDbError) throw updateDbError;
 
-      // 2. Сохраняем в user_settings
       const { data: existingSettings, error: checkError } = await supabase
         .from('user_settings')
         .select('user_id')
@@ -175,12 +173,14 @@ const Settings = ({ onBack }) => {
       } else {
         const { error: insertSettingsError } = await supabase
           .from('user_settings')
-          .insert({ user_id: user.id, avatar_url: finalAvatarUrl });
+          .insert({
+            user_id: user.id,
+            avatar_url: finalAvatarUrl
+          });
 
         if (insertSettingsError) throw insertSettingsError;
       }
 
-      // 3. Обновляем метаданные Auth
       const updates = {
         data: { 
           username: cleanUsername,
@@ -195,8 +195,6 @@ const Settings = ({ onBack }) => {
       const { error: updateAuthError } = await supabase.auth.updateUser(updates);
       if (updateAuthError) throw updateAuthError;
 
-      // КЛЮЧЕВОЙ МОМЕНТ: Форсируем обновление локальной сессии, 
-      // чтобы сработал триггер USER_UPDATED в Layout с новыми данными
       await supabase.auth.refreshSession();
 
       setAvatarUrl(finalAvatarUrl);
@@ -258,10 +256,15 @@ const Settings = ({ onBack }) => {
               {avatarPreview || avatarUrl ? (
                 <img 
                   src={avatarPreview || avatarUrl} 
-                  alt="Аватар профиля" 
+                  alt="Аватар" 
                   className="w-full h-full object-cover rounded-full ring-4 ring-slate-100 dark:ring-zinc-800 transition-transform duration-300"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
                 />
-              ) : (
+              ) : null}
+              
+              {(!avatarPreview && !avatarUrl) && (
                 <div className="w-full h-full rounded-full bg-gradient-to-tr from-sky-500 to-blue-600 text-white font-bold text-3xl flex items-center justify-center shadow-md ring-4 ring-slate-100 dark:ring-zinc-800">
                   {getInitial()}
                 </div>
@@ -324,7 +327,7 @@ const Settings = ({ onBack }) => {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Новый пароль (Необязательно)</label>
+                <label className="block text-[11px] font-semibold text-slate-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Новый пароль</label>
                 <input 
                   type="password" 
                   value={password} 
