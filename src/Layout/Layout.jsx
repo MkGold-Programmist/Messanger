@@ -142,21 +142,20 @@ const Layout = () => {
   const chatAvatarLetter = activeChatName ? activeChatName[0].toUpperCase() : '?'
 
   return (
-    <div className="h-dvh w-screen flex flex-col sm:flex-row overflow-hidden bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
+    <div className="h-screen w-screen flex flex-col sm:flex-row overflow-hidden bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
       
       {isInsideChat && (
-        <header className="flex sm:hidden h-16 w-full items-center justify-between px-4 border-b border-slate-200/60 dark:border-zinc-900/80 bg-white/95 dark:bg-zinc-950/90 backdrop-blur-md z-50 animate-in fade-in slide-in-from-top duration-200">
+        <header className="flex sm:hidden h-16 w-full items-center justify-between px-4 border-b border-slate-200 dark:border-zinc-900 bg-white dark:bg-zinc-900 z-50 flex-shrink-0">
           <div className="flex items-center gap-3">
-
             <button 
-              onClick={() => setActiveChatName(null)} // Клик по кнопке закрывает чат
-              className="p-2 -ml-2 rounded-full text-slate-500 dark:text-zinc-400 active:bg-slate-100 dark:active:bg-zinc-900 transition-colors"
+              onClick={() => setActiveChatName(null)}
+              className="p-2 -ml-2 rounded-full text-slate-500 dark:text-zinc-400 active:bg-slate-100 dark:active:bg-zinc-800 transition-colors"
               aria-label="Назад к списку чатов"
             >
               <Icon name="back" className="w-6 h-6" />
             </button>
             
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-red to-rose-500 text-white flex items-center justify-center font-bold shadow-md shadow-brand-red/10">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-red to-rose-500 text-white flex items-center justify-center font-bold shadow-sm">
               {chatAvatarLetter}
             </div>
 
@@ -170,17 +169,17 @@ const Layout = () => {
         </header>
       )}
 
-      <aside className={`${isInsideChat ? 'hidden sm:flex' : 'flex'} h-16 sm:h-full w-full sm:w-20 sm:flex-col items-center justify-between px-4 sm:px-0 sm:py-6 border-b sm:border-b-0 sm:border-r border-slate-200/80 dark:border-zinc-900/80 bg-white/80 dark:bg-zinc-950/40 backdrop-blur-md flex-shrink-0 z-50 transition-all duration-300`}>
+      <aside className={`${isInsideChat ? 'hidden sm:flex' : 'flex'} h-16 sm:h-full w-full sm:w-20 sm:flex-col items-center justify-between px-4 sm:px-0 sm:py-6 border-b sm:border-b-0 sm:border-r border-slate-200 dark:border-zinc-900 bg-white dark:bg-zinc-900 flex-shrink-0 z-40 transition-all duration-300`}>
         <div className="flex sm:flex-col gap-4 sm:gap-6 items-center w-full justify-between sm:justify-start px-2 sm:px-0">
           
-          <button className="relative cursor-pointer flex-shrink-0" onClick={() => setShowStatusInput(!showStatusInput)}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-red to-rose-500 text-white flex items-center justify-center font-bold shadow-md shadow-brand-red/10 transition-all hover:scale-105 active:scale-95">
+          <button className="relative cursor-pointer flex-shrink-0 group" onClick={() => setShowStatusInput(!showStatusInput)}>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-red to-rose-500 text-white flex items-center justify-center font-bold shadow-md transition-all group-hover:scale-105 active:scale-95">
               {avatarLetter}
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-zinc-950" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-zinc-900" />
           </button>
 
-          <div className="flex sm:flex-col gap-3 sm:gap-6 items-center">
+          <div className="flex sm:flex-col gap-3 sm:gap-4 items-center">
             <button className="p-2.5 rounded-xl text-brand-red bg-rose-500/10 border border-rose-500/20 sm:w-12 sm:h-12 flex items-center justify-center shadow-sm">
               <Icon name="chat" className="w-5 h-5" />
             </button>
@@ -194,19 +193,19 @@ const Layout = () => {
             </button>
           </div>
 
-          <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800/60 flex sm:hidden items-center justify-center text-slate-600 dark:text-zinc-400">
+          <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex sm:hidden items-center justify-center text-slate-600 dark:text-zinc-400">
             <Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5" />
           </button>
         </div>
 
-        <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 border border-slate-200/60 dark:border-zinc-800/60 hidden sm:flex sm:w-12 sm:h-12 items-center justify-center text-slate-600 dark:text-zinc-400 transition-all active:scale-95">
+        <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 border border-slate-200/60 dark:border-zinc-700 hidden sm:flex sm:w-12 sm:h-12 items-center justify-center text-slate-600 dark:text-zinc-400 transition-all active:scale-95">
           <Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5" />
         </button>
       </aside>
 
       {showStatusInput && (
         <>
-          <button className="fixed inset-0 z-50 bg-black/20 dark:bg-black/40 backdrop-blur-xs" onClick={() => setShowStatusInput(false)} />
+          <button className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowStatusInput(false)} />
           <div className="fixed sm:absolute left-4 right-4 top-18 sm:top-18 sm:left-24 z-50 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl sm:w-72 animate-in fade-in slide-in-from-top-4 duration-200">
             <p className="mb-3 text-sm font-bold truncate">{userProfile?.username || 'Профиль'}</p>
             <input
@@ -227,7 +226,7 @@ const Layout = () => {
         </>
       )}
 
-      <main className="flex-1 min-h-0 min-w-0 flex overflow-hidden relative z-10 bg-transparent h-full">
+      <main className="flex-1 min-w-0 flex overflow-hidden relative bg-transparent h-full">
         <Outlet />
       </main>
     </div>

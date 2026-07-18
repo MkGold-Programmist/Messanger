@@ -51,10 +51,7 @@ const Home = () => {
   const messagesEndRef = useRef(null)
   const searchTerm = searchQuery.trim()
 
-  // Подключаем наш созданный контекст
   const { activeChatName, setActiveChatName } = useChatState()
-
-  // ИСПРАВЛЕНИЕ: Объявляем переменную для проверки, открыт ли сейчас чат
   const isInsideChat = !!activeChatName
 
   useEffect(() => {
@@ -279,8 +276,9 @@ const Home = () => {
   }
 
   return (
-    <div className="flex flex-1 overflow-hidden w-full h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100">
-      <div className={`${isInsideChat ? 'hidden sm:block' : 'block'} w-full sm:w-80 border-r border-slate-200 dark:border-zinc-900 h-full`}>
+    <div className="flex flex-1 overflow-hidden w-full h-full bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100">
+      
+      <div className={`${isInsideChat ? 'hidden sm:block' : 'block'} w-full sm:w-80 border-r border-slate-200 dark:border-zinc-900 h-full flex-shrink-0 bg-white dark:bg-zinc-900/50 z-20`}>
         <Sidebar
           chats={chats}
           activeChat={activeChat}
@@ -297,7 +295,7 @@ const Home = () => {
         />
       </div>
 
-      <div className={`${isInsideChat ? 'block' : 'hidden sm:block'} flex-1 h-full`}>
+      <div className={`${isInsideChat ? 'block' : 'hidden sm:block'} flex-1 h-full min-w-0 bg-slate-50 dark:bg-zinc-950 z-10`}>
         <ChatWindow
           activeChatData={activeChatData}
           setActiveChat={handleSetActiveChat}
