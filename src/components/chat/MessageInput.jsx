@@ -21,7 +21,7 @@ const Sidebar = ({
 
   return (
     <section className="w-full h-full flex flex-col bg-[#FAFAFA] dark:bg-[#09090B] border-r border-[#E11D48]/10 dark:border-[#18181B] flex-shrink-0 transition-colors duration-300">
-      {/* Шапка Сайдбара */}
+
       <div className="p-4 flex flex-col gap-3 flex-shrink-0 bg-white/80 dark:bg-[#18181B]/40 backdrop-blur-md border-b border-zinc-100 dark:border-transparent">
         <div className="flex items-center justify-between">
           <div>
@@ -30,7 +30,6 @@ const Sidebar = ({
           </div>
         </div>
 
-        {/* Инпут поиска */}
         <div className="relative">
           <input
             type="text"
@@ -54,7 +53,6 @@ const Sidebar = ({
         </div>
       </div>
 
-      {/* Ошибки */}
       {errorMessage && (
         <div className="mx-4 mt-3 flex items-center justify-between rounded-xl border border-[#E11D48]/20 bg-[#E11D48]/5 px-3 py-2.5 text-xs font-semibold text-[#E11D48] animate-fade-in">
           <span className="truncate flex-1 mr-2 font-medium">{errorMessage}</span>
@@ -64,7 +62,6 @@ const Sidebar = ({
         </div>
       )}
 
-      {/* Лента элементов */}
       <div className="flex-1 overflow-y-auto space-y-1 px-3 py-3 custom-scrollbar">
         {searchTerm ? (
           <div className="space-y-1.5 pt-1">

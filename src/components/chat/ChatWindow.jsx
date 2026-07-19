@@ -82,7 +82,7 @@ export const ChatWindow = ({
 
   return (
     <section className="flex-1 flex flex-col bg-[#FAFAFA] dark:bg-[#09090B] h-full w-full min-w-0 transition-colors duration-300">
-      {/* Шапка чата */}
+
       <header className="h-16 border-b border-zinc-100 dark:border-[#18181B] px-4 sm:px-6 flex items-center justify-between bg-white/80 dark:bg-[#18181B]/80 backdrop-blur-md flex-shrink-0 z-10">
         <div className="flex items-center gap-3 min-w-0">
           <button 
@@ -105,7 +105,6 @@ export const ChatWindow = ({
         </div>
       </header>
 
-      {/* Окно сообщений */}
       <div 
         className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-cover bg-center custom-scrollbar" 
         style={wallpaperStyle}
@@ -146,7 +145,6 @@ export const ChatWindow = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Поле ввода */}
       <MessageInput onSendMessage={onSendMessage} sending={sendingMessage} />
     </section>
   )
