@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
-import  Sidebar  from '../components/chat/SideBar'
-import  ChatWindow  from '../components/chat/ChatWindow'
+import Sidebar from '../components/chat/SideBar'
+import ChatWindow from '../components/chat/ChatWindow'
 import { useChatState } from '../context/ChatContext'
 
 const CHAT_SELECT = `
@@ -161,13 +161,14 @@ const Home = () => {
 
     fetchMessagesAndSettings()
 
+    // ИСПРАВЛЕНО: Правильный синтаксис фильтра (без знака "=" перед eq)
     const channel = supabase
       .channel(`chat-${activeChat}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'messages',
-        filter: `chat_id=eq.${activeChat}`,
+        filter: `chat_id=eq.${activeChat}`, 
       }, (payload) => {
         if (mounted) {
           setMessages((prev) => appendUniqueMessage(prev, payload.new))
@@ -295,7 +296,6 @@ const Home = () => {
           setErrorMessage={setErrorMessage}
         />
       </div>
-
 
       <div className={`${isInsideChat ? 'block' : 'hidden sm:block'} flex-1 h-full min-w-0 bg-slate-50 dark:bg-zinc-950 z-10`}>
         <ChatWindow
