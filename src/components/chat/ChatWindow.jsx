@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { Icon } from '../ui/Icon'
-import MessageInput from './MessageInput' // Импорт по умолчанию сохранен
+import MessageInput from './MessageInput' 
 
 const ChatWindow = ({
   activeChatData,

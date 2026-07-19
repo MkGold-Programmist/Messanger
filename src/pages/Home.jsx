@@ -52,13 +52,16 @@ const Home = () => {
   const searchTerm = searchQuery.trim()
 
   const { activeChatName, setActiveChatName } = useChatState()
-  const isInsideChat = !!activeChatName
+  
+  // Чат открыт, если есть активный id
+  const isInsideChat = !!activeChat
 
+  // Синхронизируем состояние контекста с локальным стейтом
   useEffect(() => {
-    if (!activeChatName) {
-      setActiveChat(null)
+    if (!activeChat) {
+      setActiveChatName(null)
     }
-  }, [activeChatName])
+  }, [activeChat, setActiveChatName])
 
   useEffect(() => {
     let mounted = true
@@ -111,6 +114,10 @@ const Home = () => {
 
   const handleSetActiveChat = (chatId) => {
     setActiveChat(chatId)
+    if (!chatId) {
+      setActiveChatName(null)
+      return
+    }
     const selectedChat = chats.find(c => c.id === chatId)
     if (selectedChat) {
       setActiveChatName(selectedChat.companionName)
@@ -161,7 +168,6 @@ const Home = () => {
 
     fetchMessagesAndSettings()
 
-    // ИСПРАВЛЕНО: Правильный синтаксис фильтра (без знака "=" перед eq)
     const channel = supabase
       .channel(`chat-${activeChat}`)
       .on('postgres_changes', {
