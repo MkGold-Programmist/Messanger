@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
-import { Sidebar } from '../components/chat/SideBar'
-import { ChatWindow } from '../components/chat/ChatWindow'
+import  Sidebar  from '../components/chat/SideBar'
+import  ChatWindow  from '../components/chat/ChatWindow'
 import { useChatState } from '../context/ChatContext'
 
 const CHAT_SELECT = `
