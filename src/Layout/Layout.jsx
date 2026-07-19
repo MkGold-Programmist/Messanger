@@ -129,15 +129,11 @@ const Layout = () => {
 
     fetchUserDataAndSettings();
 
-    // Слушатель событий изменения аккаунта (включая updateUser)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'USER_UPDATED' || event === 'SIGNED_IN') && session?.user && isMounted.current) {
-        
-        // Маленький таймаут для гарантии успешной транзакции на стороне бэкенда Supabase
         setTimeout(async () => {
           if (!isMounted.current) return;
           
-          // Запрашиваем актуальные данные НАПРЯМУЮ ИЗ БД, а не из сессии клиента
           const { data: dbUser } = await supabase
             .from('users')
             .select('username')
@@ -157,12 +153,10 @@ const Layout = () => {
 
           if (freshAvatar) {
             try {
-              // Умное добавление параметра времени без затирания токенов авторизации (?token=...)
               const urlObj = new URL(freshAvatar);
               urlObj.searchParams.set('t', Date.now().toString());
               finalAvatarUrl = urlObj.toString();
             } catch (e) {
-              // На случай, если в базе сохранён относительный путь, а не полный URL
               finalAvatarUrl = freshAvatar;
             }
           }
@@ -199,20 +193,20 @@ const Layout = () => {
   const isSettingsPage = location.pathname === '/settings';
 
   return (
-    <div className="h-screen w-screen flex flex-col sm:flex-row overflow-hidden bg-slate-100 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 font-sans transition-colors duration-300">
+    <div className="h-screen w-full flex flex-col sm:flex-row overflow-hidden bg-slate-100 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 font-sans transition-colors duration-300 max-w-[1650px] mx-auto shadow-2xl relative border-x border-slate-200/30 dark:border-zinc-900/50">
 
       {isInsideChat && !isSettingsPage && (
-        <header className="flex sm:hidden h-14 w-full items-center justify-between px-4 border-b border-slate-200 dark:border-zinc-900 bg-white dark:bg-zinc-900 z-50 flex-shrink-0 shadow-xs">
+        <header className="flex sm:hidden h-14 w-full items-center justify-between px-4 border-b border-slate-200 dark:border-zinc-900 bg-white dark:bg-zinc-900 z-50 flex-shrink-0 shadow-xs animate-fadeIn">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setActiveChatName(null)}
-              className="p-2 -ml-2 rounded-full text-slate-500 dark:text-zinc-400 active:bg-slate-100 dark:active:bg-zinc-800 transition-colors"
+              className="p-2 -ml-2 rounded-full text-slate-500 dark:text-zinc-400 active:scale-90 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all"
               aria-label="Назад к списку чатов"
             >
               <Icon name="back" className="w-5 h-5" />
             </button>
             
-            <div className="w-9 h-9 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white flex items-center justify-center font-semibold text-sm shadow-xs">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white flex items-center justify-center font-semibold text-sm shadow-xs transition-transform duration-300 hover:scale-105">
               {chatAvatarLetter}
             </div>
 
@@ -225,10 +219,6 @@ const Layout = () => {
           </div>
         </header>
       )}
-
-      <main className="flex-1 min-w-0 flex overflow-hidden relative bg-transparent h-full order-1 sm:order-2">
-        <Outlet />
-      </main>
 
       <aside className={`
         ${isInsideChat ? 'hidden sm:flex' : 'flex'} 
@@ -248,14 +238,14 @@ const Layout = () => {
                 src={userProfile.avatar_url} 
                 alt="Профиль" 
                 onError={() => setAvatarError(true)}
-                className="w-11 h-11 rounded-full object-cover border-2 border-white dark:border-zinc-900 shadow-sm transition-transform hover:scale-105 duration-300"
+                className="w-11 h-11 rounded-full object-cover border-2 border-white dark:border-zinc-900 shadow-sm transition-all hover:scale-110 duration-300 hover:rotate-3 cursor-pointer"
               />
             ) : (
-              <div className="w-11 h-11 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white flex items-center justify-center font-bold text-base shadow-xs">
+              <div className="w-11 h-11 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white flex items-center justify-center font-bold text-base shadow-xs transition-transform duration-300 hover:scale-110">
                 {avatarLetter}
               </div>
             )}
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-zinc-900" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-zinc-900 animate-pulse" />
           </div>
 
           <div className="flex flex-row sm:flex-col gap-1 sm:gap-3 items-center w-full justify-around sm:justify-center">
@@ -273,7 +263,7 @@ const Layout = () => {
                 }
               `}
             >
-              <Icon name="chat" className="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-active:scale-95" />
+              <Icon name="chat" className="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5 group-active:scale-95" />
               <span className="text-[10px] sm:hidden font-medium mt-0.5 tracking-tight">Чаты</span>
             </button>
 
@@ -286,29 +276,29 @@ const Layout = () => {
                 ${
                   isSettingsPage 
                     ? 'text-rose-500 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-950/20 font-medium sm:before:h-6 before:w-6 sm:before:w-[3px]' 
-                    : 'text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 hover:bg-slate-100/50 dark:hover:bg-zinc-800/40'
+                    : 'text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/40'
                 }
               `}
               title="Настройки"
             >
-              <Icon name="settings" className="w-5 h-5 transition-transform duration-300 group-hover:rotate-45 group-active:scale-95" />
+              <Icon name="settings" className="w-5 h-5 transition-transform duration-500 group-hover:rotate-90 group-active:scale-95" />
               <span className="text-[10px] sm:hidden font-medium mt-0.5 tracking-tight">Настройки</span>
             </button>
 
             <button 
               onClick={toggleTheme} 
-              className="p-2.5 rounded-xl flex flex-col items-center justify-center text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 sm:hidden cursor-pointer active:scale-95 transition-transform"
+              className="p-2.5 rounded-xl flex flex-col items-center justify-center text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 sm:hidden cursor-pointer active:scale-90 transition-transform"
             >
-              <Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5 text-rose-500 dark:text-rose-400" />
+              <Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5 text-rose-500 dark:text-rose-400 transition-transform duration-300 rotate-0 hover:rotate-12" />
               <span className="text-[10px] font-medium mt-0.5 tracking-tight">Тема</span>
             </button>
 
             <button
               onClick={handleLogout}
-              className="p-2.5 sm:p-3 rounded-xl text-slate-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 sm:w-12 sm:h-12 flex flex-col items-center justify-center transition-all duration-300 active:scale-95 cursor-pointer"
+              className="p-2.5 sm:p-3 rounded-xl text-slate-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 sm:w-12 sm:h-12 flex flex-col items-center justify-center transition-all duration-300 active:scale-95 cursor-pointer group"
               title="Выйти"
             >
-              <Icon name="logout" className="w-5 h-5" />
+              <Icon name="logout" className="w-5 h-5 transition-transform group-hover:translate-x-0.5 duration-200" />
               <span className="text-[10px] sm:hidden font-medium mt-0.5 tracking-tight">Выйти</span>
             </button>
           </div>
@@ -317,14 +307,18 @@ const Layout = () => {
 
         <button 
           onClick={toggleTheme} 
-          className="p-3 rounded-xl bg-slate-100/70 hover:bg-slate-200/80 dark:bg-zinc-800/60 dark:hover:bg-zinc-700/60 border border-slate-200/40 dark:border-zinc-700/40 hidden sm:flex sm:w-12 sm:h-12 items-center justify-center text-slate-500 dark:text-zinc-400 transition-all duration-300 active:scale-95 cursor-pointer hover:text-rose-500 dark:hover:text-rose-400"
+          className="p-3 rounded-xl bg-slate-100/70 hover:bg-slate-200/80 dark:bg-zinc-800/60 dark:hover:bg-zinc-700/60 border border-slate-200/40 dark:border-zinc-700/40 hidden sm:flex sm:w-12 sm:h-12 items-center justify-center text-slate-500 dark:text-zinc-400 transition-all duration-300 active:scale-95 cursor-pointer hover:text-rose-500 dark:hover:text-rose-400 group"
         >
-          <Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5" />
+          <Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5 transition-transform duration-500 group-hover:rotate-45 group-hover:scale-110" />
         </button>
       </aside>
+
+      <main className="flex-1 min-w-0 flex overflow-hidden relative bg-transparent h-full order-1 sm:order-2">
+        <Outlet />
+      </main>
 
     </div>
   );
 };
 
-export default Layout;
+export default Layout;  

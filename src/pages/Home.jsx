@@ -53,10 +53,8 @@ const Home = () => {
 
   const { activeChatName, setActiveChatName } = useChatState()
   
-  // Чат открыт, если есть активный id
   const isInsideChat = !!activeChat
 
-  // Синхронизируем состояние контекста с локальным стейтом
   useEffect(() => {
     if (!activeChat) {
       setActiveChatName(null)
@@ -286,7 +284,8 @@ const Home = () => {
 
   return (
     <div className="flex flex-1 overflow-hidden w-full h-full bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100">
-      <div className={`${isInsideChat ? 'hidden sm:block' : 'block'} w-full sm:w-80 border-r border-slate-200 dark:border-zinc-900 h-full flex-shrink-0 bg-white dark:bg-zinc-900/50 z-20`}>
+      
+      <div className={`${isInsideChat ? 'hidden sm:block' : 'block'} w-full sm:w-80 border-r border-slate-200 dark:border-zinc-900 h-full flex-shrink-0 bg-white dark:bg-zinc-900/50 z-20 animate-fadeIn`}>
         <Sidebar
           chats={chats}
           activeChat={activeChat}
@@ -303,7 +302,7 @@ const Home = () => {
         />
       </div>
 
-      <div className={`${isInsideChat ? 'block' : 'hidden sm:block'} flex-1 h-full min-w-0 bg-slate-50 dark:bg-zinc-950 z-10`}>
+      <div className={`${isInsideChat ? 'block' : 'hidden sm:block'} flex-1 h-full min-w-0 bg-slate-50 dark:bg-zinc-950 z-10 transition-all duration-300 ${activeChat ? 'animate-slideIn' : ''}`}>
         <ChatWindow
           activeChatData={activeChatData}
           setActiveChat={handleSetActiveChat}
