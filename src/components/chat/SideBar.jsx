@@ -3,12 +3,12 @@ import { Icon } from '../ui/Icon'
 
 const getInitial = (value) => (value?.trim()?.[0] || '?').toUpperCase()
 
-export const Sidebar = ({
+const Sidebar = ({
   chats = [],
   activeChat,
   setActiveChat,
   chatsLoading,
-  searchQuery = '',
+  searchQuery = '', // Безопасное дефолтное значение строки
   setSearchQuery,
   globalUsers = [],
   searchLoading,
@@ -17,12 +17,11 @@ export const Sidebar = ({
   errorMessage,
   setErrorMessage
 }) => {
-
+  // Защищенный trim: если searchQuery станет undefined/null, приложение не упадет
   const searchTerm = searchQuery?.trim() || ''
 
   return (
     <section className="w-full h-full flex flex-col bg-[#FAFAFA] dark:bg-[#09090B] border-r border-[#E11D48]/10 dark:border-[#18181B] flex-shrink-0 transition-colors duration-300">
-
       <div className="p-4 flex flex-col gap-3 flex-shrink-0 bg-white/80 dark:bg-[#18181B]/40 backdrop-blur-md border-b border-zinc-100 dark:border-transparent">
         <div className="flex items-center justify-between">
           <div>
@@ -152,3 +151,5 @@ export const Sidebar = ({
     </section>
   )
 }
+
+export default Sidebar

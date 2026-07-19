@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react'
 import { Icon } from '../ui/Icon'
-import MessageInput from './MessageInput'
+import MessageInput from './MessageInput' // Импорт по умолчанию сохранен
 
-export const ChatWindow = ({
+const ChatWindow = ({
   activeChatData,
   setActiveChat,
   messages,
@@ -82,7 +82,6 @@ export const ChatWindow = ({
 
   return (
     <section className="flex-1 flex flex-col bg-[#FAFAFA] dark:bg-[#09090B] h-full w-full min-w-0 transition-colors duration-300">
-
       <header className="h-16 border-b border-zinc-100 dark:border-[#18181B] px-4 sm:px-6 flex items-center justify-between bg-white/80 dark:bg-[#18181B]/80 backdrop-blur-md flex-shrink-0 z-10">
         <div className="flex items-center gap-3 min-w-0">
           <button 
@@ -149,3 +148,5 @@ export const ChatWindow = ({
     </section>
   )
 }
+
+export default ChatWindow
