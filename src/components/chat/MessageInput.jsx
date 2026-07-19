@@ -3,7 +3,7 @@ import { Icon } from '../ui/Icon'
 
 const getInitial = (value) => (value?.trim()?.[0] || '?').toUpperCase()
 
-export const Sidebar = ({
+const Sidebar = ({
   chats,
   activeChat,
   setActiveChat,
@@ -154,3 +154,5 @@ export const Sidebar = ({
     </section>
   )
 }
+
+export default Sidebar
