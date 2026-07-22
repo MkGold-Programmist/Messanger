@@ -1,0 +1,37 @@
+<!-- Save as favicon.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Основной сочный градиент -->
+    <linearGradient id="learnit-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF3366" />
+      <stop offset="100%" stop-color="#C81E4E" />
+    </linearGradient>
+
+    <!-- Внутренний блик для объема -->
+    <linearGradient id="gloss" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Закругленный фон (iOS-style Superellipse) -->
+  <rect width="512" height="512" rx="128" fill="url(#learnit-grad)" />
+  <rect width="512" height="256" rx="128" fill="url(#gloss)" />
+
+  <!-- Буква "L" переходящая в хвостик бабла сообщений -->
+  <path d="M 160 120 
+           C 160 106.7, 170.7 96, 184 96 
+           L 184 96 
+           C 197.3 96, 208 106.7, 208 120 
+           L 208 328 
+           L 328 328 
+           C 341.3 328, 352 338.7, 352 352 
+           C 352 365.3, 341.3 376, 328 376 
+           L 184 376 
+           C 170.7 376, 160 365.3, 160 352 
+           Z" 
+        fill="#FFFFFF" />
+
+  <!-- Точка-индикатор онлайн прямо на значке -->
+  <circle cx="360" cy="160" r="44" fill="#10B981" stroke="#FFFFFF" stroke-width="12" />
+</svg>
