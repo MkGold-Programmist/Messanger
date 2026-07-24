@@ -6,7 +6,7 @@ import Layout from './Layout/Layout'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Settings from './pages/Settings'
-import { ChatProvider } from './context/ChatContext'
+import { ChatProvider } from './components/context/ChatContext'
 
 const ProtectedRoute = ({ children, session }) => {
   if (!session) {
