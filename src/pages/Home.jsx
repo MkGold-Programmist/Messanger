@@ -51,7 +51,7 @@ const Home = () => {
   const messagesEndRef = useRef(null)
   const searchTerm = searchQuery.trim()
 
-  const { activeChatName, setActiveChatName } = useChatState()
+  const { setActiveChatName } = useChatState()
   
   const isInsideChat = !!activeChat
 
@@ -224,27 +224,63 @@ const Home = () => {
     }
   }, [currentUser, searchTerm])
 
-  const handleSendMessage = async (cleanText) => {
+  // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ СООБЩЕНИЯ С ПОДДЕРЖКОЙ ФАЙЛОВ ---
+  const handleSendMessage = async (cleanText, file = null) => {
     if (!activeChat || !currentUser || sendingMessage) return
 
     setSendingMessage(true)
     setErrorMessage('')
 
-    const { data, error } = await supabase
-      .from('messages')
-      .insert([{ chat_id: activeChat, sender_id: currentUser.id, text: cleanText }])
-      .select('*')
-      .maybeSingle()
+    let file_url = null;
+    let file_name = null;
+    let file_type = null;
 
-    setSendingMessage(false)
+    try {
+      if (file) {
+        file_name = file.name;
+        file_type = file.type;
 
-    if (error) {
-      setErrorMessage(`Ошибка отправки: ${error.message}`)
-      return
-    }
+        // Генерация уникального имени для файла в Supabase Storage
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-    if (data) {
-      setMessages((prev) => appendUniqueMessage(prev, data))
+        const { error: uploadError } = await supabase.storage
+          .from('chat-files') // Убедитесь, что баккет 'chat-files' создан в Supabase
+          .upload(filePath, file);
+
+        if (uploadError) {
+          throw new Error(`Ошибка загрузки файла: ${uploadError.message}`);
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('chat-files')
+          .getPublicUrl(filePath);
+
+        file_url = publicUrlData.publicUrl;
+      }
+
+      const { data, error } = await supabase
+        .from('messages')
+        .insert([{ 
+          chat_id: activeChat, 
+          sender_id: currentUser.id, 
+          text: cleanText,
+          file_url,
+          file_name,
+          file_type
+        }])
+        .select('*')
+        .maybeSingle()
+
+      if (error) throw error;
+
+      if (data) {
+        setMessages((prev) => appendUniqueMessage(prev, data))
+      }
+    } catch (err) {
+      setErrorMessage(err.message || 'Произошла ошибка при отправке')
+    } finally {
+      setSendingMessage(false)
     }
   }
 

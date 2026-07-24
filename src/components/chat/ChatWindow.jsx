@@ -85,6 +85,7 @@ const ChatWindow = ({
       <header className="h-16 border-b border-zinc-100 dark:border-[#18181B] px-4 sm:px-6 flex items-center justify-between bg-white/80 dark:bg-[#18181B]/80 backdrop-blur-md flex-shrink-0 z-10">
         <div className="flex items-center gap-3 min-w-0">
           <button 
+            type="button"
             onClick={() => setActiveChat(null)} 
             className="sm:hidden flex items-center justify-center p-2 -ml-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
             aria-label="Назад к чатам"
