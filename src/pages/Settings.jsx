@@ -239,7 +239,7 @@ const Settings = ({ onBack }) => {
   return (
     <section className="flex-1 flex flex-col bg-slate-50/50 dark:bg-zinc-950 h-full w-full min-w-0 transition-colors duration-300 relative overflow-hidden">
 
-      {/* Header */}
+      {/* Sticky Header */}
       <header className="h-16 border-b border-slate-200/80 dark:border-zinc-800/80 px-4 sm:px-6 flex items-center justify-between bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl flex-shrink-0 z-20 sticky top-0 transition-all">
         <div className="flex items-center gap-3">
           <button 
@@ -257,8 +257,8 @@ const Settings = ({ onBack }) => {
         </div>
       </header>
 
-      {/* Content Container с увеличенным pb-28 для мобильного геймпада/бара */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-5 pb-28 sm:pb-8 max-w-2xl w-full mx-auto space-y-5 transition-all">
+      {/* Main Scrollable Area */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-5 pb-10 max-w-2xl w-full mx-auto space-y-5 transition-all">
  
         {/* Animated Message Alert */}
         {message.text && (
@@ -272,14 +272,13 @@ const Settings = ({ onBack }) => {
           </div>
         )}
 
-        <form id="settings-form" onSubmit={handleSaveSettings} className="space-y-5" autoComplete="off">
+        <form id="settings-form" onSubmit={handleSaveSettings} className="space-y-5 pb-6" autoComplete="off">
 
           {/* Profile Card */}
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden shadow-xs transition-all duration-300 hover:shadow-md">
+          <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden shadow-xs transition-all duration-300 hover:shadow-md">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-rose-600 to-red-500" />
             
             <div className="relative w-24 h-24 select-none mb-3 group">
-              {/* Soft Ambient Glow */}
               <div className="absolute -inset-1 bg-gradient-to-r from-rose-500 to-red-600 rounded-full blur-md opacity-30 group-hover:opacity-60 transition duration-500" />
 
               <div className="relative w-full h-full rounded-full overflow-hidden ring-4 ring-white dark:ring-zinc-900 bg-slate-100 dark:bg-zinc-800">
@@ -309,11 +308,11 @@ const Settings = ({ onBack }) => {
             </div>
 
             <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">{username || 'Пользователь'}</h3>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 font-mono mt-0.5">{email}</p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 font-mono mt-0.5 truncate max-w-full">{email}</p>
           </div>
 
           {/* Personal Info Group */}
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
+          <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
               <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500"><Icon name="user" className="w-4 h-4" /></span>
               <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Личные данные</h4>
@@ -330,7 +329,7 @@ const Settings = ({ onBack }) => {
                     type="email" 
                     value={email} 
                     disabled 
-                    className="w-full pl-10 pr-3 py-2.5 text-xs rounded-xl bg-slate-100/70 dark:bg-zinc-950/50 border border-slate-200/60 dark:border-zinc-800/60 outline-none text-zinc-400 dark:text-zinc-600 cursor-not-allowed font-medium font-mono select-none"
+                    className="w-full pl-10 pr-3 py-2.5 text-xs rounded-xl bg-slate-100/70 dark:bg-zinc-950/70 border border-slate-200/60 dark:border-zinc-800/60 outline-none text-zinc-400 dark:text-zinc-500 cursor-not-allowed font-medium font-mono truncate select-none"
                   />
                 </div>
               </div>
@@ -345,14 +344,14 @@ const Settings = ({ onBack }) => {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Введите никнейм"
                   required
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 focus:border-rose-500 dark:focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all duration-200 text-zinc-900 dark:text-zinc-100 font-medium placeholder:text-zinc-400"
+                  className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 focus:border-rose-500 dark:focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all duration-200 text-zinc-900 dark:text-zinc-100 font-medium placeholder:text-zinc-500"
                 />
               </div>
             </div>
           </div>
 
           {/* Security Group */}
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
+          <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
               <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500"><Icon name="lock" className="w-4 h-4" /></span>
               <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Безопасность</h4>
@@ -369,7 +368,7 @@ const Settings = ({ onBack }) => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Оставьте пустым"
                   autoComplete="new-password"
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 focus:border-rose-500 dark:focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all duration-200 text-zinc-900 dark:text-zinc-100 font-medium placeholder:text-zinc-400"
+                  className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 focus:border-rose-500 dark:focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all duration-200 text-zinc-900 dark:text-zinc-100 font-medium placeholder:text-zinc-500"
                 />
               </div>
 
@@ -383,34 +382,31 @@ const Settings = ({ onBack }) => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Оставьте пустым"
                   autoComplete="new-password"
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 focus:border-rose-500 dark:focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all duration-200 text-zinc-900 dark:text-zinc-100 font-medium placeholder:text-zinc-400"
+                  className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 focus:border-rose-500 dark:focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all duration-200 text-zinc-900 dark:text-zinc-100 font-medium placeholder:text-zinc-500"
                 />
               </div>
             </div>
           </div>
 
-        </form>
-      </div>
+          {/* Action Button Section inside Form */}
+          <div className="pt-2 flex justify-end">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold rounded-xl text-xs transition-all duration-200 active:scale-98 shadow-lg shadow-rose-500/25 disabled:opacity-50 cursor-pointer flex items-center justify-center min-w-[180px] gap-2 group"
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Icon name="check" className="w-4 h-4 transition-transform group-hover:scale-110" />
+                  <span>Сохранить изменения</span>
+                </>
+              )}
+            </button>
+          </div>
 
-      {/* Sticky Mobile / Desktop Action Bar */}
-      <div className="fixed sm:sticky bottom-0 left-0 right-0 p-4 sm:p-5 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-t border-slate-200/80 dark:border-zinc-800/80 z-30 transition-all duration-300">
-        <div className="max-w-2xl mx-auto flex justify-end">
-          <button
-            type="submit"
-            form="settings-form"
-            disabled={loading}
-            className="w-full sm:w-auto px-7 py-3 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold rounded-xl text-xs transition-all duration-200 active:scale-98 shadow-md shadow-rose-500/20 disabled:opacity-50 cursor-pointer flex items-center justify-center min-w-[160px] gap-2 group"
-          >
-            {loading ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                <Icon name="check" className="w-4 h-4 transition-transform group-hover:scale-110" />
-                <span>Сохранить изменения</span>
-              </>
-            )}
-          </button>
-        </div>
+        </form>
       </div>
 
     </section>
