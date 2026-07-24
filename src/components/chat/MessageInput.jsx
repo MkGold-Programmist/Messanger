@@ -42,7 +42,6 @@ const MessageInput = ({ onSendMessage, sending }) => {
       className="p-4 bg-white dark:bg-[#18181B] border-t border-zinc-100 dark:border-[#18181B] flex-shrink-0 relative z-20 transition-colors duration-300"
     >
       <div className="max-w-4xl mx-auto flex flex-col gap-2">
-        {/* Панель прикрепленного файла */}
         {selectedFile && (
           <div className="flex items-center gap-3 p-2.5 bg-[#FAFAFA] dark:bg-[#09090B] border border-zinc-100 dark:border-zinc-800/60 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200 shadow-3xs">
             {filePreview ? (
@@ -75,7 +74,6 @@ const MessageInput = ({ onSendMessage, sending }) => {
           </div>
         )}
 
-        {/* Основное поле ввода */}
         <div className="flex items-center gap-2 bg-[#FAFAFA] dark:bg-[#09090B] border border-zinc-200/60 dark:border-zinc-800/80 p-1.5 rounded-2xl focus-within:border-[#E11D48]/40 focus-within:ring-2 focus-within:ring-[#E11D48]/10 focus-within:bg-white dark:focus-within:bg-[#09090B] transition-all duration-200 shadow-3xs">
           <input
             type="file"

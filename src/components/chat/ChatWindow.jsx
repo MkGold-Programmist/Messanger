@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react'
-import { Icon } from '../ui/Icon'
-import MessageInput from './MessageInput' 
+import React, { useMemo } from 'react';
+import { Icon } from '../ui/Icon';
+import MessageInput from './MessageInput'; 
+import { useChatState } from '../context/ChatContext';
 
 const ChatWindow = ({
   activeChatData,
@@ -13,16 +14,26 @@ const ChatWindow = ({
   onSendMessage,
   messagesEndRef
 }) => {
+  const { setActiveChatName } = useChatState();
 
   const wallpaperStyle = useMemo(() => {
-    const wp = companionSettings?.chat_wallpaper
+    const wp = companionSettings?.chat_wallpaper;
     if (wp && wp !== 'default') {
       return {
         backgroundImage: `linear-gradient(to bottom, var(--tw-bg-opacity, rgba(250,250,250,0.93)), var(--tw-bg-opacity, rgba(250,250,250,0.93))), url(${wp})`
-      }
+      };
     }
-    return undefined
-  }, [companionSettings])
+    return undefined;
+  }, [companionSettings]);
+
+  const handleBack = () => {
+    if (typeof setActiveChat === 'function') {
+      setActiveChat(null);
+    }
+    if (typeof setActiveChatName === 'function') {
+      setActiveChatName(null);
+    }
+  };
 
   if (!activeChatData) {
     return (
@@ -31,9 +42,11 @@ const ChatWindow = ({
           <Icon name="chat" className="w-5 h-5 text-[#E11D48]" />
         </div>
         <p className="text-xs font-black text-zinc-800 dark:text-zinc-200 uppercase tracking-wider">Выберите диалог</p>
-        <p className="mt-1 max-w-xs text-[11px] text-zinc-400 dark:text-zinc-500 leading-relaxed font-medium">Начните общение, выбрав существующий чат или найдите пользователя через поиск.</p>
+        <p className="mt-1 max-w-xs text-[11px] text-zinc-400 dark:text-zinc-500 leading-relaxed font-medium">
+          Начните общение, выбрав существующий чат или найдите пользователя через поиск.
+        </p>
       </section>
-    )
+    );
   }
 
   const renderMessageContent = (msg, isMe) => {
@@ -86,7 +99,7 @@ const ChatWindow = ({
         <div className="flex items-center gap-3 min-w-0">
           <button 
             type="button"
-            onClick={() => setActiveChat(null)} 
+            onClick={handleBack} 
             className="sm:hidden flex items-center justify-center p-2 -ml-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
             aria-label="Назад к чатам"
           >
@@ -123,7 +136,7 @@ const ChatWindow = ({
           </div>
         ) : (
           messages.map((msg) => {
-            const isMe = msg.sender_id === currentUserId
+            const isMe = msg.sender_id === currentUserId;
             return (
               <div key={msg.id} className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in`}>
                 <div className={`max-w-[85%] sm:max-w-[65%] p-3 rounded-2xl shadow-3xs transition-all ${
@@ -139,7 +152,7 @@ const ChatWindow = ({
                   </span>
                 </div>
               </div>
-            )
+            );
           })
         )}
         <div ref={messagesEndRef} />
@@ -147,7 +160,7 @@ const ChatWindow = ({
 
       <MessageInput onSendMessage={onSendMessage} sending={sendingMessage} />
     </section>
-  )
-}
+  );
+};
 
-export default ChatWindow
+export default ChatWindow;
