@@ -1,14 +1,60 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 @theme {
-  --color-brand-red: #E11D48;
-  --color-brand-redHover: #BE123C;
-  --color-brand-darkBg: #09090B;  
-  --color-brand-darkPanel: #18181B;
-  --color-brand-lightBg: #FAFAFA; 
-  --color-brand-lightPanel: #FFFFFF;
+  --color-brand-red: #e11d48;
+  --color-brand-redHover: #be123c;
+  --color-brand-darkBg: #09090b;
+  --color-brand-darkPanel: #18181b;
+  --color-brand-lightBg: #fafafa;
+  --color-brand-lightPanel: #ffffff;
 }
 
 body {
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* =========================================================
+   Глобальный кастомный скроллбар (Webkit & Firefox)
+   ========================================================= */
+
+/* Для браузеров на базе Webkit (Chrome, Safari, Edge, Brave) */
+::-webkit-scrollbar {
+  width: 6px; /* Ширина вертикального скролла */
+  height: 6px; /* Высота горизонтального скролла */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* Прозрачный трек */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(161, 161, 170, 0.25); /* Тёмно-серый тонкие бегунок */
+  border-radius: 9999px; /* Полное скругление */
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(
+    225,
+    29,
+    72,
+    0.6
+  ); /* Акцентный цвет (rose-500) при наведении */
+}
+
+/* Для Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(161, 161, 170, 0.25) transparent;
+}
+
+/* Изящные утилиты Tailwind (при необходимости скрывать скролл) */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

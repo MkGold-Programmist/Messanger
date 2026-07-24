@@ -239,7 +239,7 @@ const Settings = ({ onBack }) => {
   return (
     <section className="flex-1 flex flex-col bg-slate-50/50 dark:bg-zinc-950 h-full w-full min-w-0 transition-colors duration-300 relative overflow-hidden">
 
-      {/* Sticky Header */}
+      {/* Header */}
       <header className="h-16 border-b border-slate-200/80 dark:border-zinc-800/80 px-4 sm:px-6 flex items-center justify-between bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl flex-shrink-0 z-20 sticky top-0 transition-all">
         <div className="flex items-center gap-3">
           <button 
