@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
-import Sidebar from '../components/chat/Sidebar'
+import Sidebar from '../components/chat/SideBar'
 import ChatWindow from '../components/chat/ChatWindow'
 import { useChatState } from '../components/context/ChatContext'
 
@@ -141,7 +141,7 @@ const Home = () => {
     }
   }
 
-  // Загрузка сообщений и подписка на Realtime
+  // Загрузка сообщений и подписка на Realtime (ИСПРАВЛЕННЫЙ БЛОК)
   useEffect(() => {
     if (!activeChat) {
       setMessages([])
@@ -153,34 +153,41 @@ const Home = () => {
     setMessagesLoading(true)
 
     const fetchMessagesAndSettings = async () => {
-      const messagesRequest = supabase
-        .from('messages')
-        .select('*')
-        .eq('chat_id', activeChat)
-        .order('created_at', { ascending: true })
+      try {
+        const fetchMessages = supabase
+          .from('messages')
+          .select('*')
+          .eq('chat_id', activeChat)
+          .order('created_at', { ascending: true })
 
-      const settingsRequest = activeChatData?.companionId
-        ? supabase
-          .from('user_settings')
-          .select('status_text, chat_wallpaper')
-          .eq('user_id', activeChatData.companionId)
-        : Promise.resolve({ data: [] })
+        const fetchSettings = activeChatData?.companionId
+          ? supabase
+              .from('user_settings')
+              .select('status_text, chat_wallpaper')
+              .eq('user_id', activeChatData.companionId)
+          : Promise.resolve({ data: [], error: null })
 
-      const [{ data: messagesData, error: messagesError }, { data: settingsData }] = await Promise.all([
-        messagesRequest,
-        settingsRequest,
-      ])
+        const [messagesRes, settingsRes] = await Promise.all([
+          fetchMessages,
+          fetchSettings,
+        ])
 
-      if (!mounted) return
+        if (!mounted) return
 
-      setMessagesLoading(false)
-      if (messagesError) {
-        setErrorMessage(`Ошибка загрузки сообщений: ${messagesError.message}`)
-        return
+        setMessagesLoading(false)
+
+        if (messagesRes.error) {
+          setErrorMessage(`Ошибка загрузки сообщений: ${messagesRes.error.message}`)
+          return
+        }
+
+        setMessages(messagesRes.data || [])
+        setActiveCompanionSettings(settingsRes.data?.[0] || null)
+      } catch (err) {
+        if (!mounted) return
+        setMessagesLoading(false)
+        setErrorMessage(`Ошибка получения данных: ${err.message}`)
       }
-
-      setMessages(messagesData || [])
-      setActiveCompanionSettings(settingsData?.[0] || null)
     }
 
     fetchMessagesAndSettings()
@@ -205,7 +212,7 @@ const Home = () => {
     }
   }, [activeChat, activeChatData?.companionId])
 
-  // Умная прокрутка вниз (не сбивает просмотр истории)
+  // Авто-скролл вниз при появлении сообщений
   useEffect(() => {
     if (messages.length > 0) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
