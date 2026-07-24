@@ -168,6 +168,9 @@ const Layout = () => {
           }));
           setAvatarError(false); 
         }, 250);
+      } else if (event === 'SIGNED_OUT') {
+        setActiveChatName(null);
+        setUserProfile(null);
       }
     });
 
@@ -175,7 +178,7 @@ const Layout = () => {
       isMounted.current = false; 
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, setActiveChatName]);
 
   const toggleTheme = async () => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
@@ -185,7 +188,12 @@ const Layout = () => {
   };
 
   const handleLogout = async () => {
-    try { await supabase.auth.signOut(); } finally { navigate('/login'); }
+    try { 
+      setActiveChatName(null);
+      await supabase.auth.signOut(); 
+    } finally { 
+      navigate('/login'); 
+    }
   };
 
   const avatarLetter = userProfile?.username ? userProfile.username[0].toUpperCase() : '?';

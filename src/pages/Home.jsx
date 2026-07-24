@@ -51,15 +51,16 @@ const Home = () => {
   const messagesEndRef = useRef(null)
   const searchTerm = searchQuery.trim()
 
-  const { setActiveChatName } = useChatState()
+  const { activeChatName, setActiveChatName } = useChatState()
   
   const isInsideChat = !!activeChat
 
+  // Синхронизация: если в контексте имя чата сбросилось (например, нажали "Чаты" в Layout), сбрасываем и локальный activeChat
   useEffect(() => {
-    if (!activeChat) {
-      setActiveChatName(null)
+    if (!activeChatName && activeChat !== null) {
+      setActiveChat(null)
     }
-  }, [activeChat, setActiveChatName])
+  }, [activeChatName, activeChat])
 
   useEffect(() => {
     let mounted = true
@@ -224,7 +225,6 @@ const Home = () => {
     }
   }, [currentUser, searchTerm])
 
-  // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ СООБЩЕНИЯ С ПОДДЕРЖКОЙ ФАЙЛОВ ---
   const handleSendMessage = async (cleanText, file = null) => {
     if (!activeChat || !currentUser || sendingMessage) return
 
@@ -240,12 +240,11 @@ const Home = () => {
         file_name = file.name;
         file_type = file.type;
 
-        // Генерация уникального имени для файла в Supabase Storage
         const fileExt = file.name.split('.').pop();
         const filePath = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('chat-files') // Убедитесь, что баккет 'chat-files' создан в Supabase
+          .from('chat-files')
           .upload(filePath, file);
 
         if (uploadError) {
