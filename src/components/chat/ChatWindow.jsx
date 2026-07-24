@@ -47,7 +47,6 @@ const ChatWindow = ({
 
   const renderMessageContent = (msg, isMe) => {
     const hasFile = !!msg.file_url;
-    // Проверка mime-типа или расширения в URL
     const isImage = hasFile && (
       msg.file_type?.startsWith('image/') || 
       msg.file_url.match(/\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i)
@@ -96,7 +95,6 @@ const ChatWindow = ({
 
   return (
     <section className="flex-1 flex flex-col bg-zinc-50/50 dark:bg-[#09090B] h-full w-full min-w-0 transition-colors">
-      {/* Шапка чата */}
       <header className="h-16 border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 sm:px-6 flex items-center justify-between bg-white/70 dark:bg-[#121215]/70 backdrop-blur-xl flex-shrink-0 z-10 shadow-2xs">
         <div className="flex items-center gap-3 min-w-0">
           <button 
@@ -120,7 +118,6 @@ const ChatWindow = ({
         </div>
       </header>
 
-      {/* Сообщения */}
       <div 
         className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 bg-cover bg-center custom-scrollbar" 
         style={wallpaperStyle}

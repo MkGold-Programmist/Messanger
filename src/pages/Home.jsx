@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
-import Sidebar from '../components/chat/SideBar'
+import Sidebar from '../components/chat/Sidebar'
 import ChatWindow from '../components/chat/ChatWindow'
 import { useChatState } from '../components/context/ChatContext'
 
@@ -31,6 +31,14 @@ const appendUniqueMessage = (messages, message) => {
   return [...messages, message].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
 }
 
+// Вспомогательная функция для безопасных имен файлов
+const sanitizeFileName = (fileName) => {
+  const ext = fileName.split('.').pop()
+  const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'))
+  const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, '_')
+  return `${cleanName}_${Date.now()}.${ext}`
+}
+
 const Home = () => {
   const [currentUser, setCurrentUser] = useState(null)
   const [activeChat, setActiveChat] = useState(null)
@@ -49,26 +57,35 @@ const Home = () => {
   const [errorMessage, setErrorMessage] = useState('')
 
   const messagesEndRef = useRef(null)
+  const chatContainerRef = useRef(null)
   const searchTerm = searchQuery.trim()
 
   const { activeChatName, setActiveChatName } = useChatState()
   
   const isInsideChat = !!activeChat
 
-  // Синхронизация: если в контексте имя чата сбросилось (например, нажали "Чаты" в Layout), сбрасываем и локальный activeChat
+  // Синхронизация имени активного чата с контекстом
   useEffect(() => {
     if (!activeChatName && activeChat !== null) {
       setActiveChat(null)
     }
   }, [activeChatName, activeChat])
 
+  // Автоматическое скрытие плашки с ошибкой через 5 секунд
+  useEffect(() => {
+    if (!errorMessage) return
+    const timer = setTimeout(() => setErrorMessage(''), 5000)
+    return () => clearTimeout(timer)
+  }, [errorMessage])
+
+  // Загрузка текущего пользователя
   useEffect(() => {
     let mounted = true
     const getUser = async () => {
       const { data: { user }, error } = await supabase.auth.getUser()
       if (!mounted) return
       if (error) {
-        setErrorMessage('Не получилось получить пользователя.')
+        setErrorMessage('Не удалось получить данные сессии.')
         setChatsLoading(false)
         return
       }
@@ -78,6 +95,7 @@ const Home = () => {
     return () => { mounted = false }
   }, [])
 
+  // Загрузка списка чатов
   const fetchChats = useCallback(async () => {
     if (!currentUser) return
 
@@ -123,6 +141,7 @@ const Home = () => {
     }
   }
 
+  // Загрузка сообщений и подписка на Realtime
   useEffect(() => {
     if (!activeChat) {
       setMessages([])
@@ -132,7 +151,6 @@ const Home = () => {
 
     let mounted = true
     setMessagesLoading(true)
-    setMessages([])
 
     const fetchMessagesAndSettings = async () => {
       const messagesRequest = supabase
@@ -187,10 +205,14 @@ const Home = () => {
     }
   }, [activeChat, activeChatData?.companionId])
 
+  // Умная прокрутка вниз (не сбивает просмотр истории)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, messagesLoading])
+    if (messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages.length])
 
+  // Глобальный поиск пользователей
   useEffect(() => {
     if (!searchTerm || !currentUser) {
       setGlobalUsers([])
@@ -199,8 +221,9 @@ const Home = () => {
     }
 
     let cancelled = false
+    setSearchLoading(true)
+
     const searchUsers = async () => {
-      setSearchLoading(true)
       const { data, error } = await supabase
         .from('users')
         .select('id, username, email')
@@ -225,37 +248,38 @@ const Home = () => {
     }
   }, [currentUser, searchTerm])
 
+  // Отправка сообщения
   const handleSendMessage = async (cleanText, file = null) => {
     if (!activeChat || !currentUser || sendingMessage) return
 
     setSendingMessage(true)
     setErrorMessage('')
 
-    let file_url = null;
-    let file_name = null;
-    let file_type = null;
+    let file_url = null
+    let file_name = null
+    let file_type = null
 
     try {
       if (file) {
-        file_name = file.name;
-        file_type = file.type;
+        file_name = file.name
+        file_type = file.type
 
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const sanitizedName = sanitizeFileName(file.name)
+        const filePath = `${currentUser.id}/${sanitizedName}`
 
         const { error: uploadError } = await supabase.storage
-          .from('chat-files')
-          .upload(filePath, file);
+          .from('chat-assets')
+          .upload(filePath, file, { cacheControl: '3600', upsert: false })
 
         if (uploadError) {
-          throw new Error(`Ошибка загрузки файла: ${uploadError.message}`);
+          throw new Error(`Ошибка загрузки файла: ${uploadError.message}`)
         }
 
         const { data: publicUrlData } = supabase.storage
-          .from('chat-files')
-          .getPublicUrl(filePath);
+          .from('chat-assets')
+          .getPublicUrl(filePath)
 
-        file_url = publicUrlData.publicUrl;
+        file_url = publicUrlData.publicUrl
       }
 
       const { data, error } = await supabase
@@ -271,7 +295,7 @@ const Home = () => {
         .select('*')
         .maybeSingle()
 
-      if (error) throw error;
+      if (error) throw error
 
       if (data) {
         setMessages((prev) => appendUniqueMessage(prev, data))
@@ -283,6 +307,7 @@ const Home = () => {
     }
   }
 
+  // Создание / открытие чата
   const handleStartChat = async (companion) => {
     if (!currentUser || startingChatId) return
 
@@ -318,9 +343,33 @@ const Home = () => {
   }
 
   return (
-    <div className="flex flex-1 overflow-hidden w-full h-full bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100">
+    <div className="relative flex flex-1 overflow-hidden w-full h-screen bg-zinc-950 text-zinc-100 font-sans antialiased selection:bg-[#E11D48]/30 selection:text-[#E11D48]">
       
-      <div className={`${isInsideChat ? 'hidden sm:block' : 'block'} w-full sm:w-80 border-r border-slate-200 dark:border-zinc-900 h-full flex-shrink-0 bg-white dark:bg-zinc-900/50 z-20 animate-fadeIn`}>
+      {/* Floating Error Toast Notification */}
+      {errorMessage && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500/20 backdrop-blur-xl text-red-400 text-xs font-medium rounded-2xl shadow-2xl shadow-red-500/10 animate-in fade-in slide-in-from-top-4 duration-300">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+          <span>{errorMessage}</span>
+          <button 
+            onClick={() => setErrorMessage('')}
+            className="ml-2 text-red-400/60 hover:text-red-400 transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Sidebar Section */}
+      <aside 
+        className={`
+          ${isInsideChat ? 'hidden sm:flex' : 'flex'} 
+          w-full sm:w-80 md:w-96 
+          border-r border-zinc-800/60 
+          h-full flex-col flex-shrink-0 
+          bg-zinc-900/40 backdrop-blur-2xl 
+          z-20 transition-all duration-300 ease-out
+        `}
+      >
         <Sidebar
           chats={chats}
           activeChat={activeChat}
@@ -335,9 +384,18 @@ const Home = () => {
           errorMessage={errorMessage}
           setErrorMessage={setErrorMessage}
         />
-      </div>
+      </aside>
 
-      <div className={`${isInsideChat ? 'block' : 'hidden sm:block'} flex-1 h-full min-w-0 bg-slate-50 dark:bg-zinc-950 z-10 transition-all duration-300 ${activeChat ? 'animate-slideIn' : ''}`}>
+      {/* Main Chat Window Section */}
+      <main 
+        ref={chatContainerRef}
+        className={`
+          ${isInsideChat ? 'flex' : 'hidden sm:flex'} 
+          flex-1 h-full min-w-0 
+          bg-zinc-950/80 backdrop-blur-xl 
+          z-10 flex-col relative transition-all duration-300 ease-out
+        `}
+      >
         <ChatWindow
           activeChatData={activeChatData}
           setActiveChat={handleSetActiveChat}
@@ -349,7 +407,7 @@ const Home = () => {
           onSendMessage={handleSendMessage}
           messagesEndRef={messagesEndRef}
         />
-      </div>
+      </main>
     </div>
   )
 }

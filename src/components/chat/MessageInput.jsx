@@ -20,6 +20,9 @@ const MessageInput = ({ onSendMessage, sending }) => {
   };
 
   const clearAttachment = () => {
+    if (filePreview) {
+      URL.revokeObjectURL(filePreview);
+    }
     setSelectedFile(null);
     setFilePreview("");
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -41,7 +44,6 @@ const MessageInput = ({ onSendMessage, sending }) => {
       className="p-3 sm:p-4 bg-white/80 dark:bg-[#121215]/80 backdrop-blur-xl border-t border-zinc-200/60 dark:border-zinc-800/60 flex-shrink-0 relative z-20 transition-all"
     >
       <div className="max-w-4xl mx-auto flex flex-col gap-2.5">
-        {/* Превью прикрепленного файла */}
         {selectedFile && (
           <div className="flex items-center gap-3 p-2 pl-3 bg-zinc-50/90 dark:bg-[#18181B]/90 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-200 shadow-sm">
             {filePreview ? (
@@ -76,7 +78,6 @@ const MessageInput = ({ onSendMessage, sending }) => {
           </div>
         )}
 
-        {/* Панель ввода */}
         <div className="flex items-center gap-2 bg-zinc-100/70 dark:bg-[#18181B]/80 border border-zinc-200/50 dark:border-zinc-800/80 p-1.5 pl-2.5 rounded-2xl focus-within:border-[#E11D48]/40 focus-within:ring-4 focus-within:ring-[#E11D48]/5 focus-within:bg-white dark:focus-within:bg-[#121215] transition-all duration-300 shadow-inner">
           <input
             type="file"
