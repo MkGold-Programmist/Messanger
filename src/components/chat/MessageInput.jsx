@@ -31,7 +31,6 @@ const MessageInput = ({ onSendMessage, sending }) => {
     if ((!cleanText && !selectedFile) || sending) return;
 
     onSendMessage(cleanText, selectedFile);
-    
     setText("");
     clearAttachment();
   };
@@ -39,34 +38,37 @@ const MessageInput = ({ onSendMessage, sending }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="p-4 bg-white dark:bg-[#18181B] border-t border-zinc-100 dark:border-[#18181B] flex-shrink-0 relative z-20 transition-colors duration-300"
+      className="p-3 sm:p-4 bg-white/80 dark:bg-[#121215]/80 backdrop-blur-xl border-t border-zinc-200/60 dark:border-zinc-800/60 flex-shrink-0 relative z-20 transition-all"
     >
-      <div className="max-w-4xl mx-auto flex flex-col gap-2">
+      <div className="max-w-4xl mx-auto flex flex-col gap-2.5">
+        {/* Превью прикрепленного файла */}
         {selectedFile && (
-          <div className="flex items-center gap-3 p-2.5 bg-[#FAFAFA] dark:bg-[#09090B] border border-zinc-100 dark:border-zinc-800/60 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200 shadow-3xs">
+          <div className="flex items-center gap-3 p-2 pl-3 bg-zinc-50/90 dark:bg-[#18181B]/90 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-200 shadow-sm">
             {filePreview ? (
-              <div className="relative group overflow-hidden w-12 h-12 rounded-lg border border-zinc-200/50 dark:border-zinc-800 shadow-2xs">
-                <img 
-                  src={filePreview} 
-                  alt="Превью" 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+              <div className="relative group overflow-hidden w-11 h-11 rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 shadow-xs shrink-0">
+                <img
+                  src={filePreview}
+                  alt="Превью"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
             ) : (
-              <div className="w-12 h-12 rounded-lg bg-[#E11D48]/10 dark:bg-[#E11D48]/5 text-[#E11D48] border border-[#E11D48]/20 flex items-center justify-center shrink-0 shadow-3xs">
+              <div className="w-11 h-11 rounded-xl bg-[#E11D48]/10 text-[#E11D48] border border-[#E11D48]/20 flex items-center justify-center shrink-0 shadow-xs">
                 <Icon name="file" className="w-5 h-5" />
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200 truncate">{selectedFile.name}</p>
-              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold font-mono mt-0.5">
+              <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 truncate">
+                {selectedFile.name}
+              </p>
+              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium font-mono mt-0.5">
                 {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
               </p>
             </div>
             <button
               type="button"
               onClick={clearAttachment}
-              className="p-1.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-[#E11D48] hover:bg-[#E11D48]/10 active:scale-95 transition-all cursor-pointer"
+              className="p-2 rounded-xl text-zinc-400 hover:text-[#E11D48] hover:bg-[#E11D48]/10 active:scale-90 transition-all cursor-pointer"
               title="Удалить файл"
             >
               <Icon name="x" className="w-4 h-4" />
@@ -74,7 +76,8 @@ const MessageInput = ({ onSendMessage, sending }) => {
           </div>
         )}
 
-        <div className="flex items-center gap-2 bg-[#FAFAFA] dark:bg-[#09090B] border border-zinc-200/60 dark:border-zinc-800/80 p-1.5 rounded-2xl focus-within:border-[#E11D48]/40 focus-within:ring-2 focus-within:ring-[#E11D48]/10 focus-within:bg-white dark:focus-within:bg-[#09090B] transition-all duration-200 shadow-3xs">
+        {/* Панель ввода */}
+        <div className="flex items-center gap-2 bg-zinc-100/70 dark:bg-[#18181B]/80 border border-zinc-200/50 dark:border-zinc-800/80 p-1.5 pl-2.5 rounded-2xl focus-within:border-[#E11D48]/40 focus-within:ring-4 focus-within:ring-[#E11D48]/5 focus-within:bg-white dark:focus-within:bg-[#121215] transition-all duration-300 shadow-inner">
           <input
             type="file"
             ref={fileInputRef}
@@ -82,14 +85,14 @@ const MessageInput = ({ onSendMessage, sending }) => {
             className="hidden"
             accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
           />
-          
+
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="h-9 w-9 shrink-0 grid place-items-center text-zinc-400 dark:text-zinc-500 hover:text-[#E11D48] hover:bg-[#E11D48]/10 rounded-xl transition-all active:scale-95 cursor-pointer"
+            className="h-9 w-9 shrink-0 grid place-items-center text-zinc-400 dark:text-zinc-500 hover:text-[#E11D48] hover:bg-[#E11D48]/10 rounded-xl transition-all active:scale-90 cursor-pointer"
             title="Прикрепить файл или фото"
           >
-            <Icon name="paperclip" className="w-4 h-4" />
+            <Icon name="paperclip" className="w-4.5 h-4.5" />
           </button>
 
           <input
@@ -97,13 +100,13 @@ const MessageInput = ({ onSendMessage, sending }) => {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={selectedFile ? "Добавьте подпись..." : "Напишите сообщение..."}
-            className="min-w-0 flex-1 text-xs font-medium bg-transparent outline-none px-2 py-2 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500"
+            className="min-w-0 flex-1 text-xs sm:text-sm font-medium bg-transparent outline-none px-2 py-1.5 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500"
           />
 
           <button
             type="submit"
             disabled={(!text.trim() && !selectedFile) || sending}
-            className="h-9 w-9 shrink-0 grid place-items-center bg-gradient-to-b from-[#E11D48] to-[#BE123C] hover:opacity-95 disabled:from-zinc-100 disabled:to-zinc-100 dark:disabled:from-zinc-800/40 dark:disabled:to-zinc-800/40 text-white disabled:text-zinc-400 dark:disabled:text-zinc-600 rounded-xl transition-all active:scale-95 shadow-sm shadow-[#E11D48]/10 disabled:shadow-none cursor-pointer"
+            className="h-9 w-9 shrink-0 grid place-items-center bg-gradient-to-tr from-[#E11D48] to-[#F43F5E] hover:brightness-110 active:scale-95 disabled:opacity-40 disabled:hover:brightness-100 disabled:active:scale-100 text-white rounded-xl transition-all shadow-md shadow-[#E11D48]/25 disabled:shadow-none cursor-pointer"
             aria-label="Отправить сообщение"
           >
             {sending ? (
