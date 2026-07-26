@@ -92,10 +92,6 @@ const Settings = ({ onBack }) => {
             setAvatarUrl(user.user_metadata?.avatar_url || '');
           }
         }
-
-        if (OneSignal.Notifications) {
-          setPushEnabled(OneSignal.Notifications.permission);
-        }
       } catch (err) {
         console.error('Ошибка загрузки профиля:', err);
       } finally {
@@ -104,6 +100,21 @@ const Settings = ({ onBack }) => {
     };
 
     getUserData();
+  }, []);
+
+  // Безопасная проверка прав OneSignal
+  useEffect(() => {
+    const checkOneSignal = () => {
+      try {
+        if (typeof window !== 'undefined' && OneSignal?.Notifications) {
+          setPushEnabled(Boolean(OneSignal.Notifications.permission));
+        }
+      } catch (e) {
+        console.warn('OneSignal еще не готово к работе:', e);
+      }
+    };
+
+    checkOneSignal();
   }, []);
 
   useEffect(() => {
@@ -115,8 +126,12 @@ const Settings = ({ onBack }) => {
   const handleTogglePush = async () => {
     setPushLoading(true);
     try {
+      if (!OneSignal?.Notifications) {
+        throw new Error('OneSignal SDK не загружен');
+      }
+
       const isGranted = await OneSignal.Notifications.requestPermission();
-      setPushEnabled(isGranted);
+      setPushEnabled(Boolean(isGranted));
 
       if (isGranted) {
         const { data: { user } } = await supabase.auth.getUser();
@@ -125,7 +140,7 @@ const Settings = ({ onBack }) => {
         }
         setMessage({ type: 'success', text: 'Уведомления успешно включены!' });
       } else {
-        setMessage({ type: 'error', text: 'Доступ к уведомлениям заблокирован в настройках браузера.' });
+        setMessage({ type: 'error', text: 'Доступ заблокирован в настройках браузера.' });
       }
     } catch (err) {
       console.error('Ошибка при запросе прав на Push:', err);
@@ -266,7 +281,7 @@ const Settings = ({ onBack }) => {
 
   if (initialLoading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-950">
+      <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-950 min-h-screen">
         <div className="relative flex items-center justify-center">
           <div className="w-10 h-10 border-3 border-rose-500/20 border-t-rose-500 rounded-full animate-spin" />
         </div>
@@ -296,190 +311,192 @@ const Settings = ({ onBack }) => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-5 pb-10 max-w-2xl w-full mx-auto space-y-5 transition-all">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="max-w-2xl w-full mx-auto space-y-5 pb-10">
 
-        {message.text && (
-          <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center gap-3 transition-all duration-300 animate-in fade-in slide-in-from-top-2 shadow-sm ${
-            message.type === 'success' 
-              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
-              : 'bg-rose-500/10 border-rose-500/20 text-rose-500'
-          }`}>
-            <div className={`w-2 h-2 rounded-full ${message.type === 'success' ? 'bg-emerald-500 animate-ping' : 'bg-rose-500 animate-ping'}`} />
-            <span>{message.text}</span>
-          </div>
-        )}
+          {message.text && (
+            <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center gap-3 transition-all duration-300 animate-in fade-in slide-in-from-top-2 shadow-sm ${
+              message.type === 'success' 
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
+                : 'bg-rose-500/10 border-rose-500/20 text-rose-500'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${message.type === 'success' ? 'bg-emerald-500 animate-ping' : 'bg-rose-500 animate-ping'}`} />
+              <span>{message.text}</span>
+            </div>
+          )}
 
-        <form id="settings-form" onSubmit={handleSaveSettings} className="space-y-5 pb-6" autoComplete="off">
+          <form id="settings-form" onSubmit={handleSaveSettings} className="space-y-5" autoComplete="off">
 
-          <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden shadow-xs transition-all duration-300 hover:shadow-md">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-rose-600 to-red-500" />
+            <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden shadow-xs transition-all duration-300 hover:shadow-md">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-rose-600 to-red-500" />
 
-            <div className="relative w-24 h-24 select-none mb-3 group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-rose-500 to-red-600 rounded-full blur-md opacity-30 group-hover:opacity-60 transition duration-500" />
+              <div className="relative w-24 h-24 select-none mb-3 group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-rose-500 to-red-600 rounded-full blur-md opacity-30 group-hover:opacity-60 transition duration-500" />
 
-              <div className="relative w-full h-full rounded-full overflow-hidden ring-4 ring-white dark:ring-zinc-900 bg-slate-100 dark:bg-zinc-800">
-                {currentDisplayAvatar && !hasAvatarImageError ? (
-                  <img 
-                    src={currentDisplayAvatar} 
-                    alt="Аватар" 
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    onError={() => setHasAvatarImageError(true)}
+                <div className="relative w-full h-full rounded-full overflow-hidden ring-4 ring-white dark:ring-zinc-900 bg-slate-100 dark:bg-zinc-800">
+                  {currentDisplayAvatar && !hasAvatarImageError ? (
+                    <img 
+                      src={currentDisplayAvatar} 
+                      alt="Аватар" 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onError={() => setHasAvatarImageError(true)}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-rose-500 to-red-600 text-white font-black text-3xl flex items-center justify-center">
+                      {getInitial()}
+                    </div>
+                  )}
+                </div>
+
+                <label className="absolute bottom-0 right-0 bg-rose-500 hover:bg-rose-600 text-white p-2.5 rounded-full cursor-pointer shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 ring-2 ring-white dark:ring-zinc-900 flex items-center justify-center">
+                  <Icon name="camera" className="w-4 h-4" />
+                  <input 
+                    type="file" 
+                    accept="image/png, image/jpeg, image/webp" 
+                    onChange={handleAvatarChange} 
+                    className="hidden" 
                   />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-rose-500 to-red-600 text-white font-black text-3xl flex items-center justify-center">
-                    {getInitial()}
-                  </div>
-                )}
+                </label>
               </div>
 
-              <label className="absolute bottom-0 right-0 bg-rose-500 hover:bg-rose-600 text-white p-2.5 rounded-full cursor-pointer shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 ring-2 ring-white dark:ring-zinc-900 flex items-center justify-center">
-                <Icon name="camera" className="w-4 h-4" />
-                <input 
-                  type="file" 
-                  accept="image/png, image/jpeg, image/webp" 
-                  onChange={handleAvatarChange} 
-                  className="hidden" 
-                />
-              </label>
+              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">{username || 'Пользователь'}</h3>
+              <p className="text-xs text-zinc-400 dark:text-zinc-500 font-mono mt-0.5 truncate max-w-full">{email}</p>
             </div>
 
-            <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">{username || 'Пользователь'}</h3>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 font-mono mt-0.5 truncate max-w-full">{email}</p>
-          </div>
+            <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
+              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
+                <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500"><Icon name="user" className="w-4 h-4" /></span>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Личные данные</h4>
+              </div>
 
-          <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
-            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
-              <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500"><Icon name="user" className="w-4 h-4" /></span>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Личные данные</h4>
-            </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wider">
+                    Email адрес
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3.5 text-zinc-400 dark:text-zinc-600"><Icon name="mail" className="w-4 h-4" /></span>
+                    <input 
+                      type="email" 
+                      value={email} 
+                      disabled 
+                      className="w-full pl-10 pr-3 py-2.5 text-xs rounded-xl bg-slate-100/70 dark:bg-zinc-950/70 border border-slate-200/60 dark:border-zinc-800/60 outline-none text-zinc-400 dark:text-zinc-500 cursor-not-allowed font-medium font-mono truncate select-none"
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wider">
-                  Email адрес
-                </label>
-                <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-zinc-400 dark:text-zinc-600"><Icon name="mail" className="w-4 h-4" /></span>
+                <div>
+                  <label className="block text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wider">
+                    Имя пользователя (Никнейм)
+                  </label>
                   <input 
-                    type="email" 
-                    value={email} 
-                    disabled 
-                    className="w-full pl-10 pr-3 py-2.5 text-xs rounded-xl bg-slate-100/70 dark:bg-zinc-950/70 border border-slate-200/60 dark:border-zinc-800/60 outline-none text-zinc-400 dark:text-zinc-500 cursor-not-allowed font-medium font-mono truncate select-none"
+                    type="text" 
+                    value={username} 
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Введите никнейм"
+                    required
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 focus:border-rose-500 dark:focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all duration-200 text-zinc-900 dark:text-zinc-100 font-medium placeholder:text-zinc-500"
                   />
                 </div>
               </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wider">
-                  Имя пользователя (Никнейм)
-                </label>
-                <input 
-                  type="text" 
-                  value={username} 
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Введите никнейм"
-                  required
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 focus:border-rose-500 dark:focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all duration-200 text-zinc-900 dark:text-zinc-100 font-medium placeholder:text-zinc-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
-            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
-              <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500"><Icon name="bell" className="w-4 h-4" /></span>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Уведомления</h4>
             </div>
 
-            <div className="flex items-center justify-between gap-4">
-              <div className="space-y-0.5">
-                <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-                  Push-уведомления
-                </p>
-                <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                  Получать личные сообщения, даже если приложение закрыто
-                </p>
+            <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
+              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
+                <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500"><Icon name="bell" className="w-4 h-4" /></span>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Уведомления</h4>
               </div>
 
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                    Push-уведомления
+                  </p>
+                  <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                    Получать личные сообщения, даже если приложение закрыто
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleTogglePush}
+                  disabled={pushLoading}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-2 border ${
+                    pushEnabled
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                      : 'bg-slate-100 dark:bg-zinc-800/80 border-slate-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 hover:border-transparent'
+                  }`}
+                >
+                  {pushLoading ? (
+                    <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : pushEnabled ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Включено</span>
+                    </>
+                  ) : (
+                    <span>Включить</span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
+              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
+                <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500"><Icon name="lock" className="w-4 h-4" /></span>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Безопасность</h4>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wider">
+                    Новый пароль
+                  </label>
+                  <input 
+                    type="password" 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Оставьте пустым"
+                    autoComplete="new-password"
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 focus:border-rose-500 dark:focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all duration-200 text-zinc-900 dark:text-zinc-100 font-medium placeholder:text-zinc-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wider">
+                    Подтверждение
+                  </label>
+                  <input 
+                    type="password" 
+                    value={confirmPassword} 
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Оставьте пустым"
+                    autoComplete="new-password"
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 focus:border-rose-500 dark:focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all duration-200 text-zinc-900 dark:text-zinc-100 font-medium placeholder:text-zinc-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
               <button
-                type="button"
-                onClick={handleTogglePush}
-                disabled={pushLoading}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-2 border ${
-                  pushEnabled
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
-                    : 'bg-slate-100 dark:bg-zinc-800/80 border-slate-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 hover:border-transparent'
-                }`}
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold rounded-xl text-xs transition-all duration-200 active:scale-98 shadow-lg shadow-rose-500/25 disabled:opacity-50 cursor-pointer flex items-center justify-center min-w-[180px] gap-2 group"
               >
-                {pushLoading ? (
-                  <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : pushEnabled ? (
-                  <>
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Включено</span>
-                  </>
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <span>Включить</span>
+                  <>
+                    <Icon name="check" className="w-4 h-4 transition-transform group-hover:scale-110" />
+                    <span>Сохранить изменения</span>
+                  </>
                 )}
               </button>
             </div>
-          </div>
 
-          <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
-            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
-              <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500"><Icon name="lock" className="w-4 h-4" /></span>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Безопасность</h4>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wider">
-                  Новый пароль
-                </label>
-                <input 
-                  type="password" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Оставьте пустым"
-                  autoComplete="new-password"
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 focus:border-rose-500 dark:focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all duration-200 text-zinc-900 dark:text-zinc-100 font-medium placeholder:text-zinc-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wider">
-                  Подтверждение
-                </label>
-                <input 
-                  type="password" 
-                  value={confirmPassword} 
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Оставьте пустым"
-                  autoComplete="new-password"
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 focus:border-rose-500 dark:focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all duration-200 text-zinc-900 dark:text-zinc-100 font-medium placeholder:text-zinc-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-2 flex justify-end">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold rounded-xl text-xs transition-all duration-200 active:scale-98 shadow-lg shadow-rose-500/25 disabled:opacity-50 cursor-pointer flex items-center justify-center min-w-[180px] gap-2 group"
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <Icon name="check" className="w-4 h-4 transition-transform group-hover:scale-110" />
-                  <span>Сохранить изменения</span>
-                </>
-              )}
-            </button>
-          </div>
-
-        </form>
+          </form>
+        </div>
       </div>
 
     </section>
