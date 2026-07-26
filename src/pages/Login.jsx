@@ -1,40 +1,63 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '../supabaseClient'
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
+import OneSignal from "react-onesignal";
 
 const Login = () => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = async (event) => {
-    event.preventDefault()
-    setLoading(true)
-    setError(null)
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
 
     try {
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
-      })
+      });
       if (authError) {
-        throw authError // Перекидываем ошибку в блок catch
+        throw authError;
       }
     } catch (err) {
-      setError(err.message)
-      setLoading(false)
+      setError(err.message);
+      setLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    const initPush = async () => {
+      await OneSignal.init({
+        appId: "ВАШ_ONESIGNAL_APP_ID",
+        allowLocalhostAsSecureOrigin: true,
+      });
+
+      // Привязываем ID пользователя Supabase к OneSignal
+      if (currentUser?.id) {
+        await OneSignal.login(currentUser.id);
+      }
+    };
+
+    initPush();
+  }, [currentUser]);
 
   return (
     <div className="min-h-dvh w-screen flex items-center justify-center bg-brand-lightBg dark:bg-brand-darkBg text-slate-900 dark:text-slate-100 p-4 transition-colors">
       <div className="w-full max-w-md p-8 rounded-2xl bg-white dark:bg-brand-darkPanel border border-slate-200 dark:border-zinc-800 shadow-2xl shadow-brand-red/5">
         <div className="mb-7 text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-red">Messenger</p>
-          <h1 className="mt-2 text-3xl font-black tracking-tight">Вход в аккаунт</h1>
-          <p className="mt-2 text-sm text-slate-400 dark:text-zinc-500">Рад видеть тебя снова.</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-red">
+            Messenger
+          </p>
+          <h1 className="mt-2 text-3xl font-black tracking-tight">
+            Вход в аккаунт
+          </h1>
+          <p className="mt-2 text-sm text-slate-400 dark:text-zinc-500">
+            Рад видеть тебя снова.
+          </p>
         </div>
 
         {error && (
@@ -45,7 +68,10 @@ const Login = () => {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-slate-500 dark:text-zinc-400">
+            <label
+              htmlFor="email"
+              className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-slate-500 dark:text-zinc-400"
+            >
               Email
             </label>
             <input
@@ -61,7 +87,10 @@ const Login = () => {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-slate-500 dark:text-zinc-400">
+            <label
+              htmlFor="password"
+              className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-slate-500 dark:text-zinc-400"
+            >
               Пароль
             </label>
             <input
@@ -76,21 +105,27 @@ const Login = () => {
             />
           </div>
 
-          <button 
-            type="submit" 
-            disabled={loading} 
+          <button
+            type="submit"
+            disabled={loading}
             className="w-full py-3 mt-2 bg-brand-red hover:bg-brand-redHover disabled:bg-zinc-700 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-brand-red/20 active:scale-[0.98]"
           >
-            {loading ? 'Проверяю...' : 'Войти'}
+            {loading ? "Проверяю..." : "Войти"}
           </button>
         </form>
 
         <p className="text-xs text-center text-slate-400 dark:text-zinc-500 mt-6">
-          Еще нет аккаунта? <Link to="/register" className="text-brand-red font-bold hover:underline">Создать аккаунт</Link>
+          Еще нет аккаунта?{" "}
+          <Link
+            to="/register"
+            className="text-brand-red font-bold hover:underline"
+          >
+            Создать аккаунт
+          </Link>
         </p>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
