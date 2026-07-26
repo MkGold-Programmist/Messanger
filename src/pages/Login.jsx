@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import OneSignal from "react-onesignal";
@@ -36,7 +36,6 @@ const Login = () => {
         allowLocalhostAsSecureOrigin: true,
       });
 
-      // Привязываем ID пользователя Supabase к OneSignal
       if (currentUser?.id) {
         await OneSignal.login(currentUser.id);
       }
