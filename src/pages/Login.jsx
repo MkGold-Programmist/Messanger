@@ -8,7 +8,35 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const initPush = async () => {
+      try {
+        await OneSignal.init({
+          appId: "c458feb5-75e9-4c9a-90ca-5776edf073b5", // Твой App ID из OneSignal
+          allowLocalhostAsSecureOrigin: true,
+        });
+      } catch (err) {
+        console.error("OneSignal init error:", err);
+      }
+    };
+
+    initPush();
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setCurrentUser(user);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      OneSignal.login(currentUser.id);
+    }
+  }, [currentUser]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -16,33 +44,24 @@ const Login = () => {
     setError(null);
 
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
+
       if (authError) {
         throw authError;
       }
+      if (data?.user) {
+        setCurrentUser(data.user);
+        await OneSignal.login(data.user.id);
+      }
+      navigate("/");
     } catch (err) {
       setError(err.message);
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    const initPush = async () => {
-      await OneSignal.init({
-        appId: "ВАШ_ONESIGNAL_APP_ID",
-        allowLocalhostAsSecureOrigin: true,
-      });
-
-      if (currentUser?.id) {
-        await OneSignal.login(currentUser.id);
-      }
-    };
-
-    initPush();
-  }, [currentUser]);
 
   return (
     <div className="min-h-dvh w-screen flex items-center justify-center bg-brand-lightBg dark:bg-brand-darkBg text-slate-900 dark:text-slate-100 p-4 transition-colors">
