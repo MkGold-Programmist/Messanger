@@ -3,6 +3,18 @@ import { Icon } from '../ui/Icon';
 
 const getInitial = (value) => (value?.trim()?.[0] || '?').toUpperCase();
 
+const formatTime = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+};
+
 const Sidebar = ({
   chats = [],
   activeChat,
@@ -97,7 +109,7 @@ const Sidebar = ({
         ) : chatsLoading ? (
           <div className="space-y-2 pt-1">
             {[0, 1, 2, 3].map((item) => (
-              <div key={item} className="h-14 rounded-xl bg-white dark:bg-[#121215] border border-zinc-200/40 dark:border-zinc-800/40 animate-pulse" />
+              <div key={item} className="h-16 rounded-xl bg-white dark:bg-[#121215] border border-zinc-200/40 dark:border-zinc-800/40 animate-pulse" />
             ))}
           </div>
         ) : chats.length === 0 ? (
@@ -111,6 +123,13 @@ const Sidebar = ({
         ) : (
           chats.map((chat) => {
             const selected = activeChat === chat.id;
+            const hasUnread = (chat.unreadCount || 0) > 0;
+            const lastMessageText = chat.lastMessage?.text
+              ? chat.lastMessage.text
+              : chat.lastMessage?.file_url
+              ? '📎 Вложение'
+              : 'Нет сообщений';
+
             return (
               <button
                 key={chat.id}
@@ -135,13 +154,33 @@ const Sidebar = ({
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <span className="truncate text-xs font-semibold text-zinc-900 dark:text-zinc-100">{chat.companionName}</span>
+                    <span className="truncate text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                      {chat.companionName}
+                    </span>
+                    {chat.lastMessage?.created_at && (
+                      <span className={`text-[9px] font-medium shrink-0 ${hasUnread ? 'text-[#E11D48] font-bold' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                        {formatTime(chat.lastMessage.created_at)}
+                      </span>
+                    )}
                   </div>
-                  <span className={`block truncate text-[11px] font-normal transition-colors ${
-                    selected ? 'text-[#E11D48] dark:text-[#E11D48] font-medium' : 'text-zinc-400 dark:text-zinc-500'
-                  }`}>
-                    {chat.companionEmail || 'Личный чат'}
-                  </span>
+
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={`truncate text-[11px] leading-tight font-normal transition-colors ${
+                      hasUnread 
+                        ? 'text-zinc-900 dark:text-zinc-100 font-semibold' 
+                        : selected 
+                        ? 'text-[#E11D48] dark:text-[#E11D48] font-medium' 
+                        : 'text-zinc-400 dark:text-zinc-500'
+                    }`}>
+                      {lastMessageText}
+                    </p>
+
+                    {hasUnread && (
+                      <span className="shrink-0 flex items-center justify-center min-w-[18px] h-4 px-1.5 rounded-full bg-[#E11D48] text-white text-[9px] font-extrabold shadow-xs shadow-[#E11D48]/40 animate-in zoom-in-50 duration-200">
+                        {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </button>
             );

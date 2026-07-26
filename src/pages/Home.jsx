@@ -23,6 +23,8 @@ const formatChat = (chat, currentUserId) => {
     companionId: companion?.id,
     companionName: getDisplayName(companion),
     companionEmail: companion?.email || '',
+    lastMessage: chat.lastMessage || null,
+    unreadCount: chat.unreadCount || 0,
   }
 }
 
@@ -91,24 +93,54 @@ const Home = () => {
     return () => { mounted = false }
   }, [])
 
+  // Загрузка всех чатов вместе с информацией о последнем сообщении и непрочитанных
   const fetchChats = useCallback(async () => {
     if (!currentUser) return
 
     setChatsLoading(true)
-    const { data, error } = await supabase
+    const { data: chatsData, error } = await supabase
       .from('chats')
       .select(CHAT_SELECT)
       .or(`user1_id.eq.${currentUser.id},user2_id.eq.${currentUser.id}`)
       .order('created_at', { ascending: false })
 
-    setChatsLoading(false)
-
     if (error) {
+      setChatsLoading(false)
       setErrorMessage(`Ошибка загрузки чатов: ${error.message}`)
       return
     }
 
-    const formattedChats = (data || [])
+    // Для каждого чата запрашиваем последнее сообщение и количество непрочитанных
+    const chatsWithDetails = await Promise.all(
+      (chatsData || []).map(async (chat) => {
+        // Последнее сообщение
+        const { data: lastMsgData } = await supabase
+          .from('messages')
+          .select('text, created_at, file_url, sender_id')
+          .eq('chat_id', chat.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        // Счётчик непрочитанных сообщений (где sender_id !== currentUser.id и is_read == false)
+        const { count: unreadCount } = await supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('chat_id', chat.id)
+          .neq('sender_id', currentUser.id)
+          .eq('is_read', false)
+
+        return {
+          ...chat,
+          lastMessage: lastMsgData || null,
+          unreadCount: unreadCount || 0,
+        }
+      })
+    )
+
+    setChatsLoading(false)
+
+    const formattedChats = chatsWithDetails
       .map((chat) => formatChat(chat, currentUser.id))
       .filter((chat) => chat.companionId)
 
@@ -119,10 +151,72 @@ const Home = () => {
     fetchChats()
   }, [fetchChats])
 
+  // Глобальная подписка на новые сообщения для обновления сайдбара в реальном времени
+  useEffect(() => {
+    if (!currentUser) return
+
+    const globalChannel = supabase
+      .channel('global-messages-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        (payload) => {
+          const newMsg = payload.new
+
+          setChats((prevChats) =>
+            prevChats.map((chat) => {
+              if (chat.id === newMsg.chat_id) {
+                const isCurrentActive = chat.id === activeChat
+                const isFromMe = newMsg.sender_id === currentUser.id
+
+                return {
+                  ...chat,
+                  lastMessage: {
+                    text: newMsg.text,
+                    created_at: newMsg.created_at,
+                    file_url: newMsg.file_url,
+                    sender_id: newMsg.sender_id,
+                  },
+                  // Если сообщение не от нас и чат сейчас не открыт — увеличиваем счётчик
+                  unreadCount:
+                    !isFromMe && !isCurrentActive
+                      ? chat.unreadCount + 1
+                      : chat.unreadCount,
+                }
+              }
+              return chat
+            })
+          )
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(globalChannel)
+    }
+  }, [currentUser, activeChat])
+
   const activeChatData = useMemo(
     () => chats.find((chat) => chat.id === activeChat),
-    [activeChat, chats],
+    [activeChat, chats]
   )
+
+  // Пометить сообщения чата как прочитанные
+  const markMessagesAsRead = useCallback(async (chatId) => {
+    if (!currentUser || !chatId) return
+
+    await supabase
+      .from('messages')
+      .update({ is_read: true })
+      .eq('chat_id', chatId)
+      .neq('sender_id', currentUser.id)
+      .eq('is_read', false)
+
+    // Обнуляем счётчик непрочитанных в state
+    setChats((prevChats) =>
+      prevChats.map((c) => (c.id === chatId ? { ...c, unreadCount: 0 } : c))
+    )
+  }, [currentUser])
 
   const handleSetActiveChat = (chatId) => {
     setActiveChat(chatId)
@@ -130,10 +224,11 @@ const Home = () => {
       setActiveChatName(null)
       return
     }
-    const selectedChat = chats.find(c => c.id === chatId)
+    const selectedChat = chats.find((c) => c.id === chatId)
     if (selectedChat) {
       setActiveChatName(selectedChat.companionName)
     }
+    markMessagesAsRead(chatId)
   }
 
   useEffect(() => {
@@ -177,6 +272,9 @@ const Home = () => {
 
         setMessages(messagesRes.data || [])
         setActiveCompanionSettings(settingsRes.data?.[0] || null)
+
+        // Помечаем прочитанными при открытии
+        markMessagesAsRead(activeChat)
       } catch (err) {
         if (!mounted) return
         setMessagesLoading(false)
@@ -196,6 +294,7 @@ const Home = () => {
       }, (payload) => {
         if (mounted) {
           setMessages((prev) => appendUniqueMessage(prev, payload.new))
+          markMessagesAsRead(activeChat)
         }
       })
       .subscribe()
@@ -204,7 +303,7 @@ const Home = () => {
       mounted = false
       supabase.removeChannel(channel)
     }
-  }, [activeChat, activeChatData?.companionId])
+  }, [activeChat, activeChatData?.companionId, markMessagesAsRead])
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -288,7 +387,8 @@ const Home = () => {
           text: cleanText,
           file_url,
           file_name,
-          file_type
+          file_type,
+          is_read: false
         }])
         .select('*')
         .maybeSingle()
