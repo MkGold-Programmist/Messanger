@@ -238,8 +238,6 @@ const Settings = ({ onBack }) => {
 
   return (
     <section className="flex-1 flex flex-col bg-slate-50/50 dark:bg-zinc-950 h-full w-full min-w-0 transition-colors duration-300 relative overflow-hidden">
-
-      {/* Header */}
       <header className="h-16 border-b border-slate-200/80 dark:border-zinc-800/80 px-4 sm:px-6 flex items-center justify-between bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl flex-shrink-0 z-20 sticky top-0 transition-all">
         <div className="flex items-center gap-3">
           <button 
@@ -257,10 +255,8 @@ const Settings = ({ onBack }) => {
         </div>
       </header>
 
-      {/* Main Scrollable Area */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-5 pb-10 max-w-2xl w-full mx-auto space-y-5 transition-all">
  
-        {/* Animated Message Alert */}
         {message.text && (
           <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center gap-3 transition-all duration-300 animate-in fade-in slide-in-from-top-2 shadow-sm ${
             message.type === 'success' 
@@ -274,7 +270,6 @@ const Settings = ({ onBack }) => {
 
         <form id="settings-form" onSubmit={handleSaveSettings} className="space-y-5 pb-6" autoComplete="off">
 
-          {/* Profile Card */}
           <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden shadow-xs transition-all duration-300 hover:shadow-md">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-rose-600 to-red-500" />
             
@@ -311,7 +306,6 @@ const Settings = ({ onBack }) => {
             <p className="text-xs text-zinc-400 dark:text-zinc-500 font-mono mt-0.5 truncate max-w-full">{email}</p>
           </div>
 
-          {/* Personal Info Group */}
           <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
               <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500"><Icon name="user" className="w-4 h-4" /></span>
@@ -350,7 +344,6 @@ const Settings = ({ onBack }) => {
             </div>
           </div>
 
-          {/* Security Group */}
           <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
               <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500"><Icon name="lock" className="w-4 h-4" /></span>
@@ -388,7 +381,6 @@ const Settings = ({ onBack }) => {
             </div>
           </div>
 
-          {/* Action Button Section inside Form */}
           <div className="pt-2 flex justify-end">
             <button
               type="submit"

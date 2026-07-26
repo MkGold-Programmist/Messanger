@@ -31,7 +31,6 @@ const appendUniqueMessage = (messages, message) => {
   return [...messages, message].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
 }
 
-// Вспомогательная функция для безопасных имен файлов
 const sanitizeFileName = (fileName) => {
   const ext = fileName.split('.').pop()
   const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'))
@@ -64,21 +63,18 @@ const Home = () => {
   
   const isInsideChat = !!activeChat
 
-  // Синхронизация имени активного чата с контекстом
   useEffect(() => {
     if (!activeChatName && activeChat !== null) {
       setActiveChat(null)
     }
   }, [activeChatName, activeChat])
 
-  // Автоматическое скрытие плашки с ошибкой через 5 секунд
   useEffect(() => {
     if (!errorMessage) return
     const timer = setTimeout(() => setErrorMessage(''), 5000)
     return () => clearTimeout(timer)
   }, [errorMessage])
 
-  // Загрузка текущего пользователя
   useEffect(() => {
     let mounted = true
     const getUser = async () => {
@@ -95,7 +91,6 @@ const Home = () => {
     return () => { mounted = false }
   }, [])
 
-  // Загрузка списка чатов
   const fetchChats = useCallback(async () => {
     if (!currentUser) return
 
@@ -141,7 +136,6 @@ const Home = () => {
     }
   }
 
-  // Загрузка сообщений и подписка на Realtime (ИСПРАВЛЕННЫЙ БЛОК)
   useEffect(() => {
     if (!activeChat) {
       setMessages([])
@@ -212,14 +206,12 @@ const Home = () => {
     }
   }, [activeChat, activeChatData?.companionId])
 
-  // Авто-скролл вниз при появлении сообщений
   useEffect(() => {
     if (messages.length > 0) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages.length])
 
-  // Глобальный поиск пользователей
   useEffect(() => {
     if (!searchTerm || !currentUser) {
       setGlobalUsers([])
@@ -255,7 +247,6 @@ const Home = () => {
     }
   }, [currentUser, searchTerm])
 
-  // Отправка сообщения
   const handleSendMessage = async (cleanText, file = null) => {
     if (!activeChat || !currentUser || sendingMessage) return
 
@@ -314,7 +305,6 @@ const Home = () => {
     }
   }
 
-  // Создание / открытие чата
   const handleStartChat = async (companion) => {
     if (!currentUser || startingChatId) return
 
@@ -351,8 +341,6 @@ const Home = () => {
 
   return (
     <div className="relative flex flex-1 overflow-hidden w-full h-screen bg-zinc-950 text-zinc-100 font-sans antialiased selection:bg-[#E11D48]/30 selection:text-[#E11D48]">
-      
-      {/* Floating Error Toast Notification */}
       {errorMessage && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500/20 backdrop-blur-xl text-red-400 text-xs font-medium rounded-2xl shadow-2xl shadow-red-500/10 animate-in fade-in slide-in-from-top-4 duration-300">
           <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
@@ -366,7 +354,6 @@ const Home = () => {
         </div>
       )}
 
-      {/* Sidebar Section */}
       <aside 
         className={`
           ${isInsideChat ? 'hidden sm:flex' : 'flex'} 
@@ -393,7 +380,6 @@ const Home = () => {
         />
       </aside>
 
-      {/* Main Chat Window Section */}
       <main 
         ref={chatContainerRef}
         className={`

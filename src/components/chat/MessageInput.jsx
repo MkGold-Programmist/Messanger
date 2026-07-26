@@ -55,7 +55,6 @@ export const MessageInput = ({ onSendMessage, sending }) => {
               </div>
             ) : (
               <div className="w-11 h-11 rounded-xl bg-[#E11D48]/10 text-[#E11D48] border border-[#E11D48]/20 flex items-center justify-center shrink-0 shadow-xs">
-                {/* SVG Документа/Файла */}
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
                   <polyline points="14 2 14 8 20 8" />
@@ -76,7 +75,6 @@ export const MessageInput = ({ onSendMessage, sending }) => {
               className="p-2 rounded-xl text-zinc-400 hover:text-[#E11D48] hover:bg-[#E11D48]/10 active:scale-90 transition-all cursor-pointer"
               title="Удалить файл"
             >
-              {/* SVG Крестика */}
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
@@ -94,14 +92,12 @@ export const MessageInput = ({ onSendMessage, sending }) => {
             accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
           />
 
-          {/* Кнопка прикрепления файла с поддержкой SVG */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="h-9 w-9 shrink-0 grid place-items-center text-zinc-400 dark:text-zinc-500 hover:text-[#E11D48] hover:bg-[#E11D48]/10 rounded-xl transition-all active:scale-90 cursor-pointer"
             title="Прикрепить файл или фото"
           >
-            {/* SVG Скрепки (paperclip) */}
             <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
@@ -124,7 +120,6 @@ export const MessageInput = ({ onSendMessage, sending }) => {
             {sending ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              /* SVG Самолетика (send) */
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
