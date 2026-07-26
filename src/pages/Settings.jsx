@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient'; 
+import { supabase } from '../supabaseClient';
+import OneSignal from 'react-onesignal';
 
 const ICON_PATHS = {
   back: <path d="M19 12H5M12 19l-7-7 7-7" />,
@@ -20,6 +21,12 @@ const ICON_PATHS = {
     <g>
       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
       <polyline points="22,6 12,13 2,6" />
+    </g>
+  ),
+  bell: (
+    <g>
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </g>
   ),
   check: <polyline points="20 6 9 17 4 12" />
@@ -44,16 +51,19 @@ const Settings = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
-  
+
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+
   const [avatarUrl, setAvatarUrl] = useState('');
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState('');
   const [hasAvatarImageError, setHasAvatarImageError] = useState(false);
+
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
 
   useEffect(() => {
     const getUserData = async () => {
@@ -61,7 +71,7 @@ const Settings = ({ onBack }) => {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           setEmail(user.email || '');
-          
+
           const { data: dbUser } = await supabase
             .from('users')
             .select('username')
@@ -69,7 +79,7 @@ const Settings = ({ onBack }) => {
             .maybeSingle();
 
           setUsername(dbUser?.username || user.user_metadata?.username || '');
-          
+
           const { data: settings } = await supabase
             .from('user_settings')
             .select('avatar_url')
@@ -82,18 +92,49 @@ const Settings = ({ onBack }) => {
             setAvatarUrl(user.user_metadata?.avatar_url || '');
           }
         }
+
+        if (OneSignal.Notifications) {
+          setPushEnabled(OneSignal.Notifications.permission);
+        }
       } catch (err) {
         console.error('Ошибка загрузки профиля:', err);
       } finally {
         setInitialLoading(false);
       }
     };
-    getUserData();
 
+    getUserData();
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     };
   }, [avatarPreview]);
+
+  const handleTogglePush = async () => {
+    setPushLoading(true);
+    try {
+      const isGranted = await OneSignal.Notifications.requestPermission();
+      setPushEnabled(isGranted);
+
+      if (isGranted) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          await OneSignal.login(user.id);
+        }
+        setMessage({ type: 'success', text: 'Уведомления успешно включены!' });
+      } else {
+        setMessage({ type: 'error', text: 'Доступ к уведомлениям заблокирован в настройках браузера.' });
+      }
+    } catch (err) {
+      console.error('Ошибка при запросе прав на Push:', err);
+      setMessage({ type: 'error', text: 'Не удалось активировать уведомления.' });
+    } finally {
+      setPushLoading(false);
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
+    }
+  };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -112,24 +153,24 @@ const Settings = ({ onBack }) => {
 
   const uploadAvatar = async (userId) => {
     if (!avatarFile) return avatarUrl;
-    
+
     const fileExt = avatarFile.name.split('.').pop();
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = `avatars/${fileName}`;
-    
+
     const { error: uploadError } = await supabase.storage
-      .from('chat-assets') 
+      .from('chat-assets')
       .upload(filePath, avatarFile, { upsert: true, cacheControl: '0' });
-  
+
     if (uploadError) throw uploadError;
-  
+
     const tenYearsInSeconds = 10 * 365 * 24 * 60 * 60;
     const { data, error: signError } = await supabase.storage
       .from('chat-assets')
       .createSignedUrl(filePath, tenYearsInSeconds);
 
     if (signError) throw signError;
-    
+
     return data.signedUrl;
   };
 
@@ -156,7 +197,7 @@ const Settings = ({ onBack }) => {
       let finalAvatarUrl = avatarUrl;
       if (avatarFile) {
         const uploadedUrl = await uploadAvatar(user.id);
-        
+
         try {
           const urlObj = new URL(uploadedUrl);
           urlObj.searchParams.set('t', Date.now().toString());
@@ -188,7 +229,7 @@ const Settings = ({ onBack }) => {
       if (upsertSettingsError) throw upsertSettingsError;
 
       const updates = {
-        data: { 
+        data: {
           username: cleanUsername,
           avatar_url: finalAvatarUrl
         }
@@ -211,7 +252,7 @@ const Settings = ({ onBack }) => {
       setPassword('');
       setConfirmPassword('');
       setMessage({ type: 'success', text: 'Профиль успешно сохранен!' });
-      
+
       setTimeout(() => setMessage({ type: '', text: '' }), 4000);
 
     } catch (error) {
@@ -256,7 +297,7 @@ const Settings = ({ onBack }) => {
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-5 pb-10 max-w-2xl w-full mx-auto space-y-5 transition-all">
- 
+
         {message.text && (
           <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center gap-3 transition-all duration-300 animate-in fade-in slide-in-from-top-2 shadow-sm ${
             message.type === 'success' 
@@ -272,7 +313,7 @@ const Settings = ({ onBack }) => {
 
           <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden shadow-xs transition-all duration-300 hover:shadow-md">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-rose-600 to-red-500" />
-            
+
             <div className="relative w-24 h-24 select-none mb-3 group">
               <div className="absolute -inset-1 bg-gradient-to-r from-rose-500 to-red-600 rounded-full blur-md opacity-30 group-hover:opacity-60 transition duration-500" />
 
@@ -290,7 +331,7 @@ const Settings = ({ onBack }) => {
                   </div>
                 )}
               </div>
-              
+
               <label className="absolute bottom-0 right-0 bg-rose-500 hover:bg-rose-600 text-white p-2.5 rounded-full cursor-pointer shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 ring-2 ring-white dark:ring-zinc-900 flex items-center justify-center">
                 <Icon name="camera" className="w-4 h-4" />
                 <input 
@@ -346,10 +387,50 @@ const Settings = ({ onBack }) => {
 
           <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
+              <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500"><Icon name="bell" className="w-4 h-4" /></span>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Уведомления</h4>
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                  Push-уведомления
+                </p>
+                <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                  Получать личные сообщения, даже если приложение закрыто
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleTogglePush}
+                disabled={pushLoading}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-2 border ${
+                  pushEnabled
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                    : 'bg-slate-100 dark:bg-zinc-800/80 border-slate-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 hover:border-transparent'
+                }`}
+              >
+                {pushLoading ? (
+                  <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : pushEnabled ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Включено</span>
+                  </>
+                ) : (
+                  <span>Включить</span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xs">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-3">
               <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500"><Icon name="lock" className="w-4 h-4" /></span>
               <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Безопасность</h4>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wider">
